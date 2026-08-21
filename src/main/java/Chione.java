@@ -1,12 +1,13 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
  * Entry point of the Chione chatbot.
  *
- * <p>At this stage (Level-5) Chione tracks three kinds of task (todo, deadline
- * and event), lists them on request, and can mark them as done or not done.
- * Anything it cannot carry out is reported as a {@link ChioneException} and
- * explained to the user, so the conversation continues until {@code bye}.
+ * <p>At this stage (Level-6) Chione tracks three kinds of task (todo, deadline
+ * and event), and can list, mark, unmark and delete them. Anything it cannot
+ * carry out is reported as a {@link ChioneException} and explained to the user,
+ * so the conversation continues until {@code bye}.
  */
 public class Chione {
     /** Horizontal divider printed above and below each block of output. */
@@ -33,18 +34,17 @@ public class Chione {
     /** Command prefix for adding an event, e.g. {@code "event meeting /from Mon 2pm /to 4pm"}. */
     private static final String COMMAND_EVENT = "event";
 
-    /** Upper bound on how many tasks can be stored, as allowed by the Level-2 requirements. */
-    private static final int MAX_TASKS = 100;
+    /** Command prefix for removing a task, e.g. {@code "delete 3"}. */
+    private static final String COMMAND_DELETE = "delete";
 
     public static void main(String[] args) {
         printGreeting();
 
-        // A fixed-size array is enough here because the requirements let us assume
-        // at most 100 tasks. A resizable ArrayList comes later, in A-Collections.
-        Task[] tasks = new Task[MAX_TASKS];
-
-        // Number of tasks stored so far, which is also the index of the next free slot.
-        int taskCount = 0;
+        // ArrayList grows on demand and tracks its own size, so there is no capacity
+        // limit to enforce and no separate counter to keep in step with the contents.
+        // It also shifts the remaining elements along when one is removed, which is
+        // exactly what the delete command needs.
+        ArrayList<Task> tasks = new ArrayList<>();
 
         // Scanner reads the user's input from standard input (the console), one line at a time.
         Scanner scanner = new Scanner(System.in);
@@ -60,7 +60,9 @@ public class Chione {
             }
 
             try {
-                taskCount = handleCommand(command, tasks, taskCount);
+                // The list object itself is passed along, so any change made inside
+                // is visible here without a count having to be handed back.
+                handleCommand(command, tasks);
             } catch (ChioneException e) {
                 // Every anticipated problem arrives here with a message already
                 // phrased for the user, so one catch block covers them all and
@@ -76,34 +78,38 @@ public class Chione {
     /**
      * Works out which command the user typed and carries it out.
      *
-     * @param tasks     array holding the stored tasks
-     * @param taskCount how many entries of {@code tasks} were in use before this call
-     * @param command   one line of user input, already trimmed
-     * @return the number of tasks in the list afterwards
+     * @param command one line of user input, already trimmed
+     * @param tasks   the task list, modified in place
      * @throws ChioneException if the command is unknown or its arguments are unusable
      */
-    private static int handleCommand(String command, Task[] tasks, int taskCount) throws ChioneException {
+    private static void handleCommand(String command, ArrayList<Task> tasks) throws ChioneException {
         if (command.equals(COMMAND_LIST)) {
-            printTasks(tasks, taskCount);
+            printTasks(tasks);
         } else if (isCommand(command, COMMAND_MARK)) {
-            Task task = tasks[parseTaskNumber(command, COMMAND_MARK, taskCount)];
+            Task task = tasks.get(parseTaskNumber(command, COMMAND_MARK, tasks.size()));
             task.markAsDone();
             printBlock("Nice! I've marked this task as done:", "  " + task);
         } else if (isCommand(command, COMMAND_UNMARK)) {
-            Task task = tasks[parseTaskNumber(command, COMMAND_UNMARK, taskCount)];
+            Task task = tasks.get(parseTaskNumber(command, COMMAND_UNMARK, tasks.size()));
             task.markAsNotDone();
             printBlock("OK, I've marked this task as not done yet:", "  " + task);
+        } else if (isCommand(command, COMMAND_DELETE)) {
+            // remove() both takes the task out and hands it back, so it can still
+            // be shown to the user after it has left the list.
+            Task removed = tasks.remove(parseTaskNumber(command, COMMAND_DELETE, tasks.size()));
+            printBlock("Noted. I've removed this task:",
+                    "  " + removed,
+                    "Now you have " + tasks.size() + " tasks in the list.");
         } else if (isCommand(command, COMMAND_TODO)) {
-            return addTask(tasks, taskCount, createTodo(command));
+            addTask(tasks, createTodo(command));
         } else if (isCommand(command, COMMAND_DEADLINE)) {
-            return addTask(tasks, taskCount, createDeadline(command));
+            addTask(tasks, createDeadline(command));
         } else if (isCommand(command, COMMAND_EVENT)) {
-            return addTask(tasks, taskCount, createEvent(command));
+            addTask(tasks, createEvent(command));
         } else {
             throw new ChioneException("I don't know what \"" + command + "\" means. "
-                    + "I understand: todo, deadline, event, list, mark, unmark, bye.");
+                    + "I understand: todo, deadline, event, list, mark, unmark, delete, bye.");
         }
-        return taskCount;
     }
 
     /**
@@ -124,33 +130,17 @@ public class Chione {
     /**
      * Stores a newly created task and tells the user about it.
      *
-     * <p>Java passes {@code taskCount} by value, so incrementing it inside this
-     * method would not affect the caller. The updated count is returned instead,
-     * and the caller assigns it back.
-     *
-     * @param tasks     array holding the stored tasks
-     * @param taskCount how many entries of {@code tasks} were in use before this call
-     * @param task      the task to store
-     * @return the number of tasks in the list after adding
-     * @throws ChioneException if the list is already full
+     * @param tasks the task list, modified in place
+     * @param task  the task to store
      */
-    private static int addTask(Task[] tasks, int taskCount, Task task) throws ChioneException {
-        // Without this check the next line would throw ArrayIndexOutOfBoundsException,
-        // which says nothing useful to the user.
-        if (taskCount >= MAX_TASKS) {
-            throw new ChioneException("Your list is full at " + MAX_TASKS
-                    + " tasks, so I cannot add another one.");
-        }
-
-        tasks[taskCount] = task;
-        taskCount++;
+    private static void addTask(ArrayList<Task> tasks, Task task) {
+        tasks.add(task);
 
         // "  " + task calls the task's own toString(), so the right type icon and
         // details appear without this method knowing which subclass it holds.
         printBlock("Got it. I've added this task:",
                 "  " + task,
-                "Now you have " + taskCount + " tasks in the list.");
-        return taskCount;
+                "Now you have " + tasks.size() + " tasks in the list.");
     }
 
     /**
@@ -238,27 +228,27 @@ public class Chione {
     /**
      * Prints the stored tasks as a numbered list, one per line.
      *
-     * @param tasks     array holding the stored tasks
-     * @param taskCount how many entries of {@code tasks} are actually in use
+     * @param tasks the task list to show
      */
-    private static void printTasks(Task[] tasks, int taskCount) {
-        if (taskCount == 0) {
+    private static void printTasks(ArrayList<Task> tasks) {
+        if (tasks.isEmpty()) {
             printBlock("Your list is empty for now.");
             return;
         }
 
         // Build the display lines first, so the whole list can be printed inside
         // a single pair of dividers. The extra line is the heading above the list.
-        String[] lines = new String[taskCount + 1];
+        String[] lines = new String[tasks.size() + 1];
         lines[0] = "Here are the tasks in your list:";
-        for (int i = 0; i < taskCount; i++) {
-            lines[i + 1] = (i + 1) + "." + tasks[i]; // numbering shown to the user starts at 1
+        for (int i = 0; i < tasks.size(); i++) {
+            lines[i + 1] = (i + 1) + "." + tasks.get(i); // numbering shown to the user starts at 1
         }
         printBlock(lines);
     }
 
     /**
-     * Extracts the array index of the task referred to by a {@code mark}/{@code unmark} command.
+     * Extracts the list index of the task referred to by a command such as
+     * {@code mark}, {@code unmark} or {@code delete}.
      *
      * <p>The user counts tasks from 1 but the array is indexed from 0, so the
      * number typed is decremented by one.
