@@ -4,38 +4,15 @@ import java.util.Scanner;
 /**
  * Entry point of the Chione chatbot.
  *
- * <p>At this stage (Level-6) Chione tracks three kinds of task (todo, deadline
- * and event), and can list, mark, unmark and delete them. Anything it cannot
- * carry out is reported as a {@link ChioneException} and explained to the user,
- * so the conversation continues until {@code bye}.
+ * <p>Chione tracks three kinds of task (todo, deadline and event), and can list,
+ * mark, unmark and delete them. Each line of input is matched to a {@link Command}
+ * and carried out; anything it cannot carry out is reported as a
+ * {@link ChioneException} and explained to the user, so the conversation
+ * continues until {@code bye}.
  */
 public class Chione {
     /** Horizontal divider printed above and below each block of output. */
     private static final String DIVIDER = "    ____________________________________________________________";
-
-    /** Command that ends the conversation. */
-    private static final String COMMAND_BYE = "bye";
-
-    /** Command that shows everything stored so far. */
-    private static final String COMMAND_LIST = "list";
-
-    /** Command prefix for marking a task as done, e.g. {@code "mark 2"}. */
-    private static final String COMMAND_MARK = "mark";
-
-    /** Command prefix for marking a task as not done, e.g. {@code "unmark 2"}. */
-    private static final String COMMAND_UNMARK = "unmark";
-
-    /** Command prefix for adding a todo, e.g. {@code "todo borrow book"}. */
-    private static final String COMMAND_TODO = "todo";
-
-    /** Command prefix for adding a deadline, e.g. {@code "deadline return book /by Sunday"}. */
-    private static final String COMMAND_DEADLINE = "deadline";
-
-    /** Command prefix for adding an event, e.g. {@code "event meeting /from Mon 2pm /to 4pm"}. */
-    private static final String COMMAND_EVENT = "event";
-
-    /** Command prefix for removing a task, e.g. {@code "delete 3"}. */
-    private static final String COMMAND_DELETE = "delete";
 
     public static void main(String[] args) {
         printGreeting();
@@ -53,16 +30,17 @@ public class Chione {
         // (e.g. when input is piped in from a file, or the user presses Ctrl+D).
         // Without it, nextLine() would throw a NoSuchElementException.
         while (scanner.hasNextLine()) {
-            String command = scanner.nextLine().trim();
-
-            if (command.equals(COMMAND_BYE)) {
-                break;
-            }
+            String input = scanner.nextLine().trim();
 
             try {
+                Command command = Command.parse(input);
+                if (command == Command.BYE) {
+                    break;
+                }
+
                 // The list object itself is passed along, so any change made inside
                 // is visible here without a count having to be handed back.
-                handleCommand(command, tasks);
+                handleCommand(command, input, tasks);
             } catch (ChioneException e) {
                 // Every anticipated problem arrives here with a message already
                 // phrased for the user, so one catch block covers them all and
@@ -76,55 +54,48 @@ public class Chione {
     }
 
     /**
-     * Works out which command the user typed and carries it out.
+     * Carries out an already-identified command.
      *
-     * @param command one line of user input, already trimmed
+     * <p>Switching on the enum lets each branch be labelled with the command it
+     * serves rather than with a string comparison, and the arrow form has no
+     * fall-through, so a missing {@code break} cannot silently run the next branch.
+     *
+     * @param command the command the user invoked
+     * @param input   the full line of user input, already trimmed
      * @param tasks   the task list, modified in place
-     * @throws ChioneException if the command is unknown or its arguments are unusable
+     * @throws ChioneException if the command's arguments are unusable
      */
-    private static void handleCommand(String command, ArrayList<Task> tasks) throws ChioneException {
-        if (command.equals(COMMAND_LIST)) {
-            printTasks(tasks);
-        } else if (isCommand(command, COMMAND_MARK)) {
-            Task task = tasks.get(parseTaskNumber(command, COMMAND_MARK, tasks.size()));
+    private static void handleCommand(Command command, String input, ArrayList<Task> tasks)
+            throws ChioneException {
+        // Stripping the keyword once here means the branches below deal only with
+        // what the user typed after it.
+        String arguments = command.argumentsOf(input);
+
+        switch (command) {
+        case LIST -> printTasks(tasks);
+        case MARK -> {
+            Task task = tasks.get(parseTaskNumber(arguments, command, tasks.size()));
             task.markAsDone();
             printBlock("Nice! I've marked this task as done:", "  " + task);
-        } else if (isCommand(command, COMMAND_UNMARK)) {
-            Task task = tasks.get(parseTaskNumber(command, COMMAND_UNMARK, tasks.size()));
+        }
+        case UNMARK -> {
+            Task task = tasks.get(parseTaskNumber(arguments, command, tasks.size()));
             task.markAsNotDone();
             printBlock("OK, I've marked this task as not done yet:", "  " + task);
-        } else if (isCommand(command, COMMAND_DELETE)) {
+        }
+        case DELETE -> {
             // remove() both takes the task out and hands it back, so it can still
             // be shown to the user after it has left the list.
-            Task removed = tasks.remove(parseTaskNumber(command, COMMAND_DELETE, tasks.size()));
+            Task removed = tasks.remove(parseTaskNumber(arguments, command, tasks.size()));
             printBlock("Noted. I've removed this task:",
                     "  " + removed,
                     "Now you have " + tasks.size() + " tasks in the list.");
-        } else if (isCommand(command, COMMAND_TODO)) {
-            addTask(tasks, createTodo(command));
-        } else if (isCommand(command, COMMAND_DEADLINE)) {
-            addTask(tasks, createDeadline(command));
-        } else if (isCommand(command, COMMAND_EVENT)) {
-            addTask(tasks, createEvent(command));
-        } else {
-            throw new ChioneException("I don't know what \"" + command + "\" means. "
-                    + "I understand: todo, deadline, event, list, mark, unmark, delete, bye.");
         }
-    }
-
-    /**
-     * Checks whether a line of input invokes the given command.
-     *
-     * <p>Matching the keyword on its own as well as with arguments is what lets a
-     * bare {@code "todo"} be reported as a missing description rather than as an
-     * unknown command.
-     *
-     * @param input   one line of user input, already trimmed
-     * @param keyword the command keyword to test for
-     * @return true if the input is the keyword alone or the keyword plus arguments
-     */
-    private static boolean isCommand(String input, String keyword) {
-        return input.equals(keyword) || input.startsWith(keyword + " ");
+        case TODO -> addTask(tasks, createTodo(arguments));
+        case DEADLINE -> addTask(tasks, createDeadline(arguments));
+        case EVENT -> addTask(tasks, createEvent(arguments));
+        default -> throw new ChioneException("I have not learnt to do that yet.");
+        }
     }
 
     /**
@@ -144,14 +115,14 @@ public class Chione {
     }
 
     /**
-     * Builds a todo from a command such as {@code "todo borrow book"}.
+     * Builds a todo from the arguments of a {@code todo} command,
+     * e.g. {@code "borrow book"}.
      *
-     * @param command the full command line
+     * @param description everything typed after the keyword
      * @return the new todo
      * @throws ChioneException if no description was given
      */
-    private static Todo createTodo(String command) throws ChioneException {
-        String description = command.substring(COMMAND_TODO.length()).trim();
+    private static Todo createTodo(String description) throws ChioneException {
         if (description.isEmpty()) {
             throw new ChioneException("A todo needs a description. Try: todo borrow book");
         }
@@ -159,15 +130,14 @@ public class Chione {
     }
 
     /**
-     * Builds a deadline from a command such as {@code "deadline return book /by Sunday"}.
+     * Builds a deadline from the arguments of a {@code deadline} command,
+     * e.g. {@code "return book /by Sunday"}.
      *
-     * @param command the full command line
+     * @param arguments everything typed after the keyword
      * @return the new deadline
      * @throws ChioneException if the description or the due date is missing
      */
-    private static Deadline createDeadline(String command) throws ChioneException {
-        String arguments = command.substring(COMMAND_DEADLINE.length()).trim();
-
+    private static Deadline createDeadline(String arguments) throws ChioneException {
         // The limit of 2 stops the split at the first " /by ", so a description
         // that itself contains " /by " is kept intact. The space glued on the
         // front lets "deadline /by Sunday" split as well, so its empty
@@ -192,15 +162,14 @@ public class Chione {
     }
 
     /**
-     * Builds an event from a command such as {@code "event meeting /from Mon 2pm /to 4pm"}.
+     * Builds an event from the arguments of an {@code event} command,
+     * e.g. {@code "meeting /from Mon 2pm /to 4pm"}.
      *
-     * @param command the full command line
+     * @param arguments everything typed after the keyword
      * @return the new event
      * @throws ChioneException if the description, the start or the end is missing
      */
-    private static Event createEvent(String command) throws ChioneException {
-        String arguments = command.substring(COMMAND_EVENT.length()).trim();
-
+    private static Event createEvent(String arguments) throws ChioneException {
         // Peel off the description first, then the start time, leaving the end time.
         // The glued-on spaces serve the same purpose as in createDeadline.
         String[] descriptionAndRest = (" " + arguments).split(" /from ", 2);
@@ -250,30 +219,30 @@ public class Chione {
      * Extracts the list index of the task referred to by a command such as
      * {@code mark}, {@code unmark} or {@code delete}.
      *
-     * <p>The user counts tasks from 1 but the array is indexed from 0, so the
+     * <p>The user counts tasks from 1 but the list is indexed from 0, so the
      * number typed is decremented by one.
      *
-     * @param command   the full command line, e.g. {@code "mark 2"}
-     * @param keyword    the command keyword, stripped off the front and quoted in errors
-     * @param taskCount  how many tasks exist, used to check the number is in range
-     * @return the index into the task array
+     * @param arguments everything typed after the keyword, e.g. {@code "2"}
+     * @param command   the command being carried out, quoted back in error messages
+     * @param taskCount how many tasks exist, used to check the number is in range
+     * @return the index into the task list
      * @throws ChioneException if the number is missing, not a number, or outside the list
      */
-    private static int parseTaskNumber(String command, String keyword, int taskCount)
+    private static int parseTaskNumber(String arguments, Command command, int taskCount)
             throws ChioneException {
-        String argument = command.substring(keyword.length()).trim();
-        if (argument.isEmpty()) {
+        String keyword = command.getKeyword();
+        if (arguments.isEmpty()) {
             throw new ChioneException("Tell me which task to " + keyword + ". "
                     + "Try: " + keyword + " 2");
         }
 
         int taskNumber;
         try {
-            taskNumber = Integer.parseInt(argument);
+            taskNumber = Integer.parseInt(arguments);
         } catch (NumberFormatException e) {
             // Integer.parseInt reports a parsing failure; the user needs to be told
             // what to type instead, so the low-level exception is translated here.
-            throw new ChioneException("\"" + argument + "\" is not a task number. "
+            throw new ChioneException("\"" + arguments + "\" is not a task number. "
                     + "Try: " + keyword + " 2");
         }
 

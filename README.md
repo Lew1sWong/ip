@@ -1,6 +1,38 @@
-# Duke project template
+# Chione
 
-This is a project template for a greenfield Java project. It's named after the Java mascot _Duke_. Given below are instructions on how to use it.
+Chione is a command-line personal assistant chatbot that keeps track of your tasks.
+It is built as the individual project (iP) for CS2103/T.
+
+```
+  ____  _   _  ___   ___   _   _  _____
+ / ___|| | | ||_ _| / _ \ | \ | || ____|
+| |    | |_| | | | | | | ||  \| ||  _|
+| |___ |  _  | | | | |_| || |\  || |___
+ \____||_| |_||___| \___/ |_| \_||_____|
+```
+
+## Features
+
+| Command                                          | What it does                     |
+|--------------------------------------------------|----------------------------------|
+| `todo DESCRIPTION`                               | Adds a task with no date         |
+| `deadline DESCRIPTION /by WHEN`                  | Adds a task due by a given time  |
+| `event DESCRIPTION /from START /to END`          | Adds a task spanning two times   |
+| `list`                                           | Shows every task                 |
+| `mark INDEX` / `unmark INDEX`                    | Marks a task as done / not done  |
+| `delete INDEX`                                   | Removes a task                   |
+| `bye`                                            | Ends the conversation            |
+
+Example session:
+
+```
+todo borrow book
+    ____________________________________________________________
+     Got it. I've added this task:
+       [T][ ] borrow book
+     Now you have 1 tasks in the list.
+    ____________________________________________________________
+```
 
 ## Setting up in Intellij
 
@@ -13,13 +45,13 @@ Prerequisites: JDK 25, update Intellij to the most recent version.
    1. If there are any further prompts, accept the defaults.
 1. Configure the project to use **JDK 25** (not other versions) as explained in [here](https://www.jetbrains.com/help/idea/sdk.html#set-up-jdk).<br>
    In the same dialog, set the **Project language level** field to the `SDK default` option.
-1. After that, locate the `src/main/java/Duke.java` file, right-click it, and choose `Run Duke.main()` (if the code editor is showing compile errors, try restarting the IDE). If the setup is correct, you should see something like the below as the output:
-   ```
-    ____        _        
-   |  _ \ _   _| | _____ 
-   | | | | | | | |/ / _ \
-   | |_| | |_| |   <  __/
-   |____/ \__,_|_|\_\___|
-   ```
+1. After that, locate the `src/main/java/Chione.java` file, right-click it, and choose `Run Chione.main()` (if the code editor is showing compile errors, try restarting the IDE). If the setup is correct, you should see the banner above followed by a greeting.
 
 **Warning:** Keep the `src\main\java` folder as the root folder for Java files (i.e., don't rename those folders or move Java files to another folder outside of this folder path), as this is the default location some tools (e.g., Gradle) expect to find Java files.
+
+## Acknowledgements
+
+The code in this project was written with Claude Code (Anthropic), used at
+level AI-5: the AI implemented each increment from the requirements given in
+the course website, and I reviewed the resulting code, asked for explanations
+of the design decisions behind it, and tested the behaviour before committing.
