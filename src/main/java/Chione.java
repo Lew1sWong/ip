@@ -14,6 +14,15 @@ public class Chione {
     /** Horizontal divider printed above and below each block of output. */
     private static final String DIVIDER = "    ____________________________________________________________";
 
+    /**
+     * Where the task list is kept between runs.
+     *
+     * <p>Relative to the folder Chione is started from, so the program works on
+     * any machine; {@link Storage} turns it into a path suited to the operating
+     * system it finds itself on.
+     */
+    private static final String SAVE_FILE_PATH = "data/chione.txt";
+
     public static void main(String[] args) {
         printGreeting();
 
@@ -21,7 +30,8 @@ public class Chione {
         // limit to enforce and no separate counter to keep in step with the contents.
         // It also shifts the remaining elements along when one is removed, which is
         // exactly what the delete command needs.
-        ArrayList<Task> tasks = new ArrayList<>();
+        Storage storage = new Storage(SAVE_FILE_PATH);
+        ArrayList<Task> tasks = loadTasks(storage);
 
         // Scanner reads the user's input from standard input (the console), one line at a time.
         Scanner scanner = new Scanner(System.in);
@@ -41,6 +51,12 @@ public class Chione {
                 // The list object itself is passed along, so any change made inside
                 // is visible here without a count having to be handed back.
                 handleCommand(command, input, tasks);
+
+                // Saving here, once, keeps the file in step with the list without
+                // every branch of handleCommand having to remember to do it.
+                // Commands such as "list" change nothing and so rewrite an
+                // identical file, which is cheap at this size and never wrong.
+                storage.save(tasks);
             } catch (ChioneException e) {
                 // Every anticipated problem arrives here with a message already
                 // phrased for the user, so one catch block covers them all and
@@ -51,6 +67,26 @@ public class Chione {
 
         scanner.close();
         printFarewell();
+    }
+
+    /**
+     * Reads the saved tasks, or starts afresh if they cannot be read.
+     *
+     * <p>Chione is still usable without its save file, so a loading problem is
+     * reported and stepped over rather than allowed to stop the program.
+     *
+     * @param storage where the tasks are kept
+     * @return the stored tasks, or an empty list if they could not be loaded
+     */
+    private static ArrayList<Task> loadTasks(Storage storage) {
+        try {
+            return storage.load();
+        } catch (ChioneException e) {
+            printBlock(e.getMessage(),
+                    "I'll start with an empty list. Note that saving anything new",
+                    "will replace that file, so rescue it first if you need it.");
+            return new ArrayList<>();
+        }
     }
 
     /**

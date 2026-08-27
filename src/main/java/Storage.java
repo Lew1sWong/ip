@@ -1,0 +1,190 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Keeps the task list on disk so that it survives between runs of Chione.
+ *
+ * <p>Every task is written as one line of a plain text file, e.g.
+ * {@code "D | 0 | return book | June 6th"}. A text format was chosen over Java
+ * object serialisation because the saved file stays readable and editable by a
+ * human, which makes it far easier to inspect when something goes wrong.
+ *
+ * <p>Reading and writing live here rather than in {@link Chione} so that the
+ * chatbot only has to decide <em>when</em> to save, not <em>how</em> a task is
+ * turned into text and back again.
+ */
+public class Storage {
+    /** Separator between the fields of one saved line. */
+    private static final String SEPARATOR = " | ";
+
+    /**
+     * Regular expression matching {@link #SEPARATOR}.
+     *
+     * <p>{@code split} takes a regex, and {@code |} means "or" in a regex, so the
+     * bar has to be escaped with a backslash — which itself has to be escaped to
+     * survive being written in a Java string literal.
+     */
+    private static final String SEPARATOR_PATTERN = " \\| ";
+
+    /**
+     * Where the tasks are stored.
+     *
+     * <p>Built with {@link Paths#get} from path segments rather than by gluing
+     * strings together with {@code "/"}, so the same code works on Windows
+     * (which uses {@code \}) as well as on macOS and Linux.
+     */
+    private final Path filePath;
+
+    /**
+     * Points this storage at a file.
+     *
+     * @param filePath where to keep the tasks, as a path relative to the folder
+     *                 the program is run from, e.g. {@code "data/chione.txt"}.
+     *                 A relative path is used deliberately: an absolute one such
+     *                 as {@code C:\data} would break on any other machine.
+     */
+    public Storage(String filePath) {
+        this.filePath = Paths.get(filePath);
+    }
+
+    /**
+     * Writes the whole task list to disk, replacing whatever was there before.
+     *
+     * <p>Rewriting the entire file on every change is slower than appending, but
+     * it is the only approach that stays correct when a task is edited or
+     * deleted, and the list is far too small for the difference to be noticeable.
+     *
+     * @param tasks the tasks to store
+     * @throws ChioneException if the file or its folder cannot be written
+     */
+    public void save(ArrayList<Task> tasks) throws ChioneException {
+        try {
+            // The data folder will not exist the first time anyone runs Chione,
+            // and Files.write does not create missing folders for us.
+            // createDirectories does nothing if the folder is already there.
+            Path parentFolder = filePath.getParent();
+            if (parentFolder != null) {
+                Files.createDirectories(parentFolder);
+            }
+
+            List<String> lines = new ArrayList<>();
+            for (Task task : tasks) {
+                // Each task renders its own line, so this loop never has to ask
+                // what kind of task it is holding.
+                lines.add(task.toSaveFormat());
+            }
+
+            // Files.write creates the file if it is missing and truncates it if
+            // it is not, which is exactly the "replace the contents" we want.
+            Files.write(filePath, lines);
+        } catch (IOException e) {
+            throw new ChioneException("I could not save your tasks to " + filePath
+                    + ". Your list is still fine for this session, "
+                    + "but it may not be there next time.");
+        }
+    }
+
+    /**
+     * Reads the task list back from disk.
+     *
+     * <p>A missing file is not an error: it simply means nobody has saved
+     * anything yet, which is the normal state the very first time Chione runs.
+     *
+     * @return the stored tasks, or an empty list if nothing has been saved yet
+     * @throws ChioneException if the file exists but cannot be read or understood
+     */
+    public ArrayList<Task> load() throws ChioneException {
+        ArrayList<Task> tasks = new ArrayList<>();
+
+        if (!Files.exists(filePath)) {
+            return tasks;
+        }
+
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(filePath);
+        } catch (IOException e) {
+            throw new ChioneException("I found " + filePath + " but could not read it.");
+        }
+
+        for (String line : lines) {
+            // Tolerate blank lines, which a text editor can easily leave behind.
+            if (line.isBlank()) {
+                continue;
+            }
+            tasks.add(parseTask(line));
+        }
+        return tasks;
+    }
+
+    /**
+     * Rebuilds one task from its saved line.
+     *
+     * <p>This is the mirror image of {@link Task#toSaveFormat()}. It is strict
+     * about the number of fields on purpose: a line that does not look right is
+     * reported rather than half-understood, so a damaged save file cannot turn
+     * into a silently wrong task list.
+     *
+     * @param line one line of the save file, known not to be blank
+     * @return the task the line describes
+     * @throws ChioneException if the line does not match any known task format
+     */
+    private static Task parseTask(String line) throws ChioneException {
+        String[] parts = line.split(SEPARATOR_PATTERN);
+        if (parts.length < 3) {
+            throw corruptedFile(line);
+        }
+
+        String doneFlag = parts[1];
+        if (!doneFlag.equals("0") && !doneFlag.equals("1")) {
+            throw corruptedFile(line);
+        }
+        String description = parts[2];
+
+        // Each task type has its own field count, so the length check doubles as
+        // a check that the line really is of the type its first field claims.
+        Task task = switch (parts[0]) {
+        case "T" -> {
+            if (parts.length != 3) {
+                throw corruptedFile(line);
+            }
+            yield new Todo(description);
+        }
+        case "D" -> {
+            if (parts.length != 4) {
+                throw corruptedFile(line);
+            }
+            yield new Deadline(description, parts[3]);
+        }
+        case "E" -> {
+            if (parts.length != 5) {
+                throw corruptedFile(line);
+            }
+            yield new Event(description, parts[3], parts[4]);
+        }
+        default -> throw corruptedFile(line);
+        };
+
+        if (doneFlag.equals("1")) {
+            task.markAsDone();
+        }
+        return task;
+    }
+
+    /**
+     * Builds the exception used for every unreadable line, so the wording and the
+     * advice that goes with it are written once.
+     *
+     * @param line the line that could not be understood, quoted back to the user
+     *             so they can find and fix it by hand
+     * @return the exception to throw
+     */
+    private static ChioneException corruptedFile(String line) {
+        return new ChioneException("My save file has a line I don't understand: \""
+                + line + "\". Fix or delete that line and start me again.");
+    }
+}
