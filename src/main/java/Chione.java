@@ -117,17 +117,17 @@ public class Chione {
         case LIST -> ui.showTasks(tasks);
         case ON -> showTasksOn(arguments);
         case MARK -> {
-            Task task = tasks.get(Parser.parseTaskNumber(arguments, command, tasks.size()));
+            Task task = tasks.get(Parser.parseTaskNumber(arguments, command));
             task.markAsDone();
             ui.showMarked(task);
         }
         case UNMARK -> {
-            Task task = tasks.get(Parser.parseTaskNumber(arguments, command, tasks.size()));
+            Task task = tasks.get(Parser.parseTaskNumber(arguments, command));
             task.markAsNotDone();
             ui.showUnmarked(task);
         }
         case DELETE -> {
-            Task removed = tasks.remove(Parser.parseTaskNumber(arguments, command, tasks.size()));
+            Task removed = tasks.remove(Parser.parseTaskNumber(arguments, command));
             ui.showRemoved(removed, tasks.size());
         }
         case TODO -> addTask(Parser.parseTodo(arguments));

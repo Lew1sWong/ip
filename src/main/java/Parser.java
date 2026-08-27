@@ -132,13 +132,16 @@ public final class Parser {
      * <p>The user counts tasks from 1 but the list is indexed from 0, so the
      * number typed is decremented by one.
      *
+     * <p>Whether the number actually points at a task is not decided here:
+     * {@link TaskList} knows how long it is and refuses a position it does not
+     * hold. This method only insists that a number was given at all.
+     *
      * @param arguments everything typed after the keyword, e.g. {@code "2"}
      * @param command   the command being carried out, quoted back in error messages
-     * @param taskCount how many tasks exist, used to check the number is in range
      * @return the index into the task list
-     * @throws ChioneException if the number is missing, not a number, or outside the list
+     * @throws ChioneException if the number is missing or is not a number
      */
-    public static int parseTaskNumber(String arguments, Command command, int taskCount)
+    public static int parseTaskNumber(String arguments, Command command)
             throws ChioneException {
         String keyword = command.getKeyword();
         if (arguments.isEmpty()) {
@@ -156,10 +159,6 @@ public final class Parser {
                     + "Try: " + keyword + " 2");
         }
 
-        if (taskNumber < 1 || taskNumber > taskCount) {
-            throw new ChioneException("There is no task " + taskNumber + ". "
-                    + "Your list has " + taskCount + " task(s) right now.");
-        }
         return taskNumber - 1;
     }
 
