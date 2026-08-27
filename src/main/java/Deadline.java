@@ -30,4 +30,13 @@ public class Deadline extends Task {
     public String toString() {
         return "[D]" + super.toString() + " (by: " + by + ")";
     }
+
+    /**
+     * Returns the saved line with the type letter in front and the due date
+     * appended, e.g. {@code "D | 0 | return book | June 6th"}.
+     */
+    @Override
+    public String toSaveFormat() {
+        return "D | " + super.toSaveFormat() + " | " + by;
+    }
 }

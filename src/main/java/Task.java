@@ -57,4 +57,19 @@ public class Task {
     public String toString() {
         return "[" + getStatusIcon() + "] " + description;
     }
+
+    /**
+     * Returns this task as one line of the save file, e.g. {@code "1 | read book"}.
+     *
+     * <p>Each subclass prefixes its own type letter and appends its own extra
+     * fields, so every class writes exactly the part it knows about and no single
+     * method has to know about all three task types. Fields are separated by
+     * {@code " | "} rather than a comma, because a comma is far more likely to
+     * turn up inside a description the user typed.
+     *
+     * @return the part every task shares: the done flag and the description
+     */
+    public String toSaveFormat() {
+        return (isDone ? "1" : "0") + " | " + description;
+    }
 }

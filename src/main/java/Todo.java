@@ -23,4 +23,13 @@ public class Todo extends Task {
     public String toString() {
         return "[T]" + super.toString();
     }
+
+    /**
+     * Returns the saved line prefixed with the todo type letter,
+     * e.g. {@code "T | 1 | read book"}.
+     */
+    @Override
+    public String toSaveFormat() {
+        return "T | " + super.toSaveFormat();
+    }
 }

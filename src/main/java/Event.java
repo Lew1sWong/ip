@@ -29,4 +29,13 @@ public class Event extends Task {
     public String toString() {
         return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";
     }
+
+    /**
+     * Returns the saved line with the type letter in front and both times
+     * appended, e.g. {@code "E | 0 | project meeting | Mon 2pm | 4pm"}.
+     */
+    @Override
+    public String toSaveFormat() {
+        return "E | " + super.toSaveFormat() + " | " + from + " | " + to;
+    }
 }
