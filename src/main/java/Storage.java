@@ -62,7 +62,7 @@ public class Storage {
      * @param tasks the tasks to store
      * @throws ChioneException if the file or its folder cannot be written
      */
-    public void save(ArrayList<Task> tasks) throws ChioneException {
+    public void save(TaskList tasks) throws ChioneException {
         try {
             // The data folder will not exist the first time anyone runs Chione,
             // and Files.write does not create missing folders for us.
@@ -73,7 +73,7 @@ public class Storage {
             }
 
             List<String> lines = new ArrayList<>();
-            for (Task task : tasks) {
+            for (Task task : tasks.asList()) {
                 // Each task renders its own line, so this loop never has to ask
                 // what kind of task it is holding.
                 lines.add(task.toSaveFormat());
