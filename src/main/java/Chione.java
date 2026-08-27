@@ -1,5 +1,4 @@
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -27,12 +26,8 @@ public class Chione {
     public static void main(String[] args) {
         printGreeting();
 
-        // ArrayList grows on demand and tracks its own size, so there is no capacity
-        // limit to enforce and no separate counter to keep in step with the contents.
-        // It also shifts the remaining elements along when one is removed, which is
-        // exactly what the delete command needs.
         Storage storage = new Storage(SAVE_FILE_PATH);
-        ArrayList<Task> tasks = loadTasks(storage);
+        TaskList tasks = loadTasks(storage);
 
         // Scanner reads the user's input from standard input (the console), one line at a time.
         Scanner scanner = new Scanner(System.in);
@@ -79,14 +74,14 @@ public class Chione {
      * @param storage where the tasks are kept
      * @return the stored tasks, or an empty list if they could not be loaded
      */
-    private static ArrayList<Task> loadTasks(Storage storage) {
+    private static TaskList loadTasks(Storage storage) {
         try {
-            return storage.load();
+            return new TaskList(storage.load());
         } catch (ChioneException e) {
             printBlock(e.getMessage(),
                     "I'll start with an empty list. Note that saving anything new",
                     "will replace that file, so rescue it first if you need it.");
-            return new ArrayList<>();
+            return new TaskList();
         }
     }
 
@@ -102,7 +97,7 @@ public class Chione {
      * @param tasks   the task list, modified in place
      * @throws ChioneException if the command's arguments are unusable
      */
-    private static void handleCommand(Command command, String input, ArrayList<Task> tasks)
+    private static void handleCommand(Command command, String input, TaskList tasks)
             throws ChioneException {
         // Stripping the keyword once here means the branches below deal only with
         // what the user typed after it.
@@ -142,7 +137,7 @@ public class Chione {
      * @param tasks the task list, modified in place
      * @param task  the task to store
      */
-    private static void addTask(ArrayList<Task> tasks, Task task) {
+    private static void addTask(TaskList tasks, Task task) {
         tasks.add(task);
 
         // "  " + task calls the task's own toString(), so the right type icon and
@@ -239,7 +234,7 @@ public class Chione {
      *
      * @param tasks the task list to show
      */
-    private static void printTasks(ArrayList<Task> tasks) {
+    private static void printTasks(TaskList tasks) {
         if (tasks.isEmpty()) {
             printBlock("Your list is empty for now.");
             return;
@@ -262,7 +257,7 @@ public class Chione {
      * @param tasks     the task list to search
      * @throws ChioneException if no day was given, or it is not a readable date
      */
-    private static void printTasksOn(String arguments, ArrayList<Task> tasks)
+    private static void printTasksOn(String arguments, TaskList tasks)
             throws ChioneException {
         if (arguments.isEmpty()) {
             throw new ChioneException("Tell me which day to look at. Try: on 2019-10-15");
@@ -271,15 +266,7 @@ public class Chione {
         LocalDate date = DateTimes.parseDate(arguments);
         String readableDate = DateTimes.formatDate(date);
 
-        // Each task decides for itself whether it falls on the day, so this loop
-        // never has to ask what kind of task it is looking at.
-        ArrayList<Task> matches = new ArrayList<>();
-        for (Task task : tasks) {
-            if (task.occursOn(date)) {
-                matches.add(task);
-            }
-        }
-
+        TaskList matches = tasks.findOn(date);
         if (matches.isEmpty()) {
             printBlock("Nothing on " + readableDate + ".");
             return;
