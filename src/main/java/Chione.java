@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -109,6 +110,7 @@ public class Chione {
 
         switch (command) {
         case LIST -> printTasks(tasks);
+        case ON -> printTasksOn(arguments, tasks);
         case MARK -> {
             Task task = tasks.get(parseTaskNumber(arguments, command, tasks.size()));
             task.markAsDone();
@@ -194,7 +196,9 @@ public class Chione {
             throw new ChioneException("Tell me when it is due after /by. "
                     + "Try: deadline return book /by Sunday");
         }
-        return new Deadline(description, by);
+        // DateTimes.parse rejects anything that is not a date it can read, so a
+        // Deadline can never be built around text that only looks like one.
+        return new Deadline(description, DateTimes.parse(by));
     }
 
     /**
@@ -227,7 +231,7 @@ public class Chione {
             throw new ChioneException("An event needs a description, a start and an end. "
                     + "Try: event project meeting /from Mon 2pm /to 4pm");
         }
-        return new Event(description, from, to);
+        return new Event(description, DateTimes.parse(from), DateTimes.parse(to));
     }
 
     /**
@@ -247,6 +251,44 @@ public class Chione {
         lines[0] = "Here are the tasks in your list:";
         for (int i = 0; i < tasks.size(); i++) {
             lines[i + 1] = (i + 1) + "." + tasks.get(i); // numbering shown to the user starts at 1
+        }
+        printBlock(lines);
+    }
+
+    /**
+     * Prints every task falling on one particular day.
+     *
+     * @param arguments everything typed after {@code on}, e.g. {@code "2019-10-15"}
+     * @param tasks     the task list to search
+     * @throws ChioneException if no day was given, or it is not a readable date
+     */
+    private static void printTasksOn(String arguments, ArrayList<Task> tasks)
+            throws ChioneException {
+        if (arguments.isEmpty()) {
+            throw new ChioneException("Tell me which day to look at. Try: on 2019-10-15");
+        }
+
+        LocalDate date = DateTimes.parseDate(arguments);
+        String readableDate = DateTimes.formatDate(date);
+
+        // Each task decides for itself whether it falls on the day, so this loop
+        // never has to ask what kind of task it is looking at.
+        ArrayList<Task> matches = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.occursOn(date)) {
+                matches.add(task);
+            }
+        }
+
+        if (matches.isEmpty()) {
+            printBlock("Nothing on " + readableDate + ".");
+            return;
+        }
+
+        String[] lines = new String[matches.size() + 1];
+        lines[0] = "Here is what you have on " + readableDate + ":";
+        for (int i = 0; i < matches.size(); i++) {
+            lines[i + 1] = (i + 1) + "." + matches.get(i);
         }
         printBlock(lines);
     }

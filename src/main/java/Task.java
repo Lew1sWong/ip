@@ -1,3 +1,5 @@
+import java.time.LocalDate;
+
 /**
  * A single item in the user's task list.
  *
@@ -56,6 +58,21 @@ public class Task {
     @Override
     public String toString() {
         return "[" + getStatusIcon() + "] " + description;
+    }
+
+    /**
+     * Reports whether this task falls on the given day.
+     *
+     * <p>A plain task has no date, so the answer here is always no. Deadlines and
+     * events override this with their own answer. Asking the task itself, rather
+     * than testing its type from outside, means the {@code on} command works for
+     * any task type added later without being changed.
+     *
+     * @param date the day being asked about
+     * @return {@code true} if this task falls on that day
+     */
+    public boolean occursOn(LocalDate date) {
+        return false;
     }
 
     /**

@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -158,13 +159,15 @@ public class Storage {
             if (parts.length != 4) {
                 throw corruptedFile(line);
             }
-            yield new Deadline(description, parts[3]);
+            yield new Deadline(description, parseSavedMoment(parts[3], line));
         }
         case "E" -> {
             if (parts.length != 5) {
                 throw corruptedFile(line);
             }
-            yield new Event(description, parts[3], parts[4]);
+            yield new Event(description,
+                    parseSavedMoment(parts[3], line),
+                    parseSavedMoment(parts[4], line));
         }
         default -> throw corruptedFile(line);
         };
@@ -173,6 +176,27 @@ public class Storage {
             task.markAsDone();
         }
         return task;
+    }
+
+    /**
+     * Reads one date out of a saved line.
+     *
+     * <p>{@link DateTimes#parse} explains how to <em>type</em> a date, which is
+     * not useful advice about a file, so a date that cannot be read is reported
+     * as a damaged line instead.
+     *
+     * @param text the date field, e.g. {@code "2019-10-15 1800"}
+     * @param line the whole line, quoted back if the date cannot be read
+     * @return the moment the field refers to
+     * @throws ChioneException if the field is not a date Chione can read
+     */
+    private static LocalDateTime parseSavedMoment(String text, String line)
+            throws ChioneException {
+        try {
+            return DateTimes.parse(text);
+        } catch (ChioneException e) {
+            throw corruptedFile(line);
+        }
     }
 
     /**
