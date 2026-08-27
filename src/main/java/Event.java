@@ -1,15 +1,18 @@
+import java.time.LocalDateTime;
+
 /**
  * A task that starts and ends at a given date or time,
- * e.g. {@code "project meeting /from Mon 2pm /to 4pm"}.
+ * e.g. {@code "project meeting /from 2019-10-15 1400 /to 2019-10-15 1600"}.
  *
- * <p>Displayed as {@code [E][ ] project meeting (from: Mon 2pm to: 4pm)}.
+ * <p>Displayed as
+ * {@code [E][ ] project meeting (from: Oct 15 2019, 2:00pm to: Oct 15 2019, 4:00pm)}.
  */
 public class Event extends Task {
-    /** When the event starts, kept as plain text like {@link Deadline#by}. */
-    protected String from;
+    /** When the event starts, held as a real moment like {@link Deadline#by}. */
+    protected LocalDateTime from;
 
-    /** When the event ends, kept as plain text like {@link Deadline#by}. */
-    protected String to;
+    /** When the event ends, held as a real moment like {@link Deadline#by}. */
+    protected LocalDateTime to;
 
     /**
      * Creates an event that starts out not done.
@@ -18,7 +21,7 @@ public class Event extends Task {
      * @param from        when it starts
      * @param to          when it ends
      */
-    public Event(String description, String from, String to) {
+    public Event(String description, LocalDateTime from, LocalDateTime to) {
         super(description);
         this.from = from;
         this.to = to;
@@ -27,15 +30,17 @@ public class Event extends Task {
     /** Returns the task prefixed with its type icon and followed by its time range. */
     @Override
     public String toString() {
-        return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";
+        return "[E]" + super.toString()
+                + " (from: " + DateTimes.format(from) + " to: " + DateTimes.format(to) + ")";
     }
 
     /**
-     * Returns the saved line with the type letter in front and both times
-     * appended, e.g. {@code "E | 0 | project meeting | Mon 2pm | 4pm"}.
+     * Returns the saved line with the type letter in front and both moments
+     * appended, e.g. {@code "E | 0 | meeting | 2019-10-15 1400 | 2019-10-15 1600"}.
      */
     @Override
     public String toSaveFormat() {
-        return "E | " + super.toSaveFormat() + " | " + from + " | " + to;
+        return "E | " + super.toSaveFormat()
+                + " | " + DateTimes.toSaveFormat(from) + " | " + DateTimes.toSaveFormat(to);
     }
 }

@@ -1,18 +1,21 @@
+import java.time.LocalDateTime;
+
 /**
  * A task that must be finished before a given date or time,
- * e.g. {@code "submit report /by Sunday"}.
+ * e.g. {@code "submit report /by 2019-10-15 1800"}.
  *
- * <p>Displayed as {@code [D][ ] submit report (by: Sunday)}.
+ * <p>Displayed as {@code [D][ ] submit report (by: Oct 15 2019, 6:00pm)}.
  */
 public class Deadline extends Task {
     /**
      * When the task is due.
      *
-     * <p>Kept as plain text for now: the Level-4 requirements explicitly allow
-     * dates to be treated as strings, so {@code "no idea :-p"} is just as valid
-     * as {@code "Sunday"}. A later increment converts these to real date objects.
+     * <p>Held as a {@link LocalDateTime} rather than as text, so that the date
+     * can be compared with other dates — which is what lets the {@code on}
+     * command find every task falling on a particular day. Storing it as a
+     * string would make that a matter of comparing spelling rather than time.
      */
-    protected String by;
+    protected LocalDateTime by;
 
     /**
      * Creates a deadline that starts out not done.
@@ -20,7 +23,7 @@ public class Deadline extends Task {
      * @param description what the user wants to do
      * @param by          when it is due
      */
-    public Deadline(String description, String by) {
+    public Deadline(String description, LocalDateTime by) {
         super(description);
         this.by = by;
     }
@@ -28,15 +31,15 @@ public class Deadline extends Task {
     /** Returns the task prefixed with its type icon and followed by the due date. */
     @Override
     public String toString() {
-        return "[D]" + super.toString() + " (by: " + by + ")";
+        return "[D]" + super.toString() + " (by: " + DateTimes.format(by) + ")";
     }
 
     /**
      * Returns the saved line with the type letter in front and the due date
-     * appended, e.g. {@code "D | 0 | return book | June 6th"}.
+     * appended, e.g. {@code "D | 0 | return book | 2019-10-15 1800"}.
      */
     @Override
     public String toSaveFormat() {
-        return "D | " + super.toSaveFormat() + " | " + by;
+        return "D | " + super.toSaveFormat() + " | " + DateTimes.toSaveFormat(by);
     }
 }

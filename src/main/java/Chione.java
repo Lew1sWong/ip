@@ -194,7 +194,9 @@ public class Chione {
             throw new ChioneException("Tell me when it is due after /by. "
                     + "Try: deadline return book /by Sunday");
         }
-        return new Deadline(description, by);
+        // DateTimes.parse rejects anything that is not a date it can read, so a
+        // Deadline can never be built around text that only looks like one.
+        return new Deadline(description, DateTimes.parse(by));
     }
 
     /**
@@ -227,7 +229,7 @@ public class Chione {
             throw new ChioneException("An event needs a description, a start and an end. "
                     + "Try: event project meeting /from Mon 2pm /to 4pm");
         }
-        return new Event(description, from, to);
+        return new Event(description, DateTimes.parse(from), DateTimes.parse(to));
     }
 
     /**
