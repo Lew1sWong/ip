@@ -1,79 +1,49 @@
 /**
- * The set of instructions Chione understands.
+ * Something the user has asked Chione to do.
  *
- * <p>Each constant owns the keyword the user types to invoke it, so the list of
- * valid commands exists in exactly one place: adding a command here is enough
- * for {@link Parser} to recognise it and quote it in error messages, and for the
- * compiler to demand a branch for it in the switch that carries commands out.
+ * <p>A {@link CommandType} is a word Chione recognises; a {@code Command} is a
+ * particular request, already understood and holding whatever it needs to be
+ * carried out — the task to add, or the position to delete. Turning a line of
+ * input into one of these is {@link Parser}'s job; carrying it out is this
+ * class's.
  *
- * <p>Recognising which keyword was typed is {@link Parser}'s job, not this
- * enum's. What is left here is the vocabulary itself.
- *
- * <p>An enum is used rather than string constants because a {@code Command} can
- * only ever hold one of these nine values. A typo like {@code Command.LITS}
- * fails to compile, whereas the string {@code "lits"} would compile happily and
- * simply never match anything at runtime.
+ * <p>Because each command knows how to carry itself out, {@link Chione} no
+ * longer needs a branch per command. Adding a command means adding a subclass
+ * here and a case in {@link Parser}, and nothing in the main loop changes.
  */
-public enum Command {
-    /** Adds a task with no date attached. */
-    TODO("todo"),
-
-    /** Adds a task due by a given date. */
-    DEADLINE("deadline"),
-
-    /** Adds a task that runs between two given dates. */
-    EVENT("event"),
-
-    /** Shows every stored task. */
-    LIST("list"),
-
-    /** Shows the tasks falling on one particular day. */
-    ON("on"),
-
-    /** Marks a task as done. */
-    MARK("mark"),
-
-    /** Marks a task as not done. */
-    UNMARK("unmark"),
-
-    /** Removes a task from the list. */
-    DELETE("delete"),
-
-    /** Ends the conversation. */
-    BYE("bye");
-
-    /** The word the user types to invoke this command. */
-    private final String keyword;
-
+public abstract class Command {
     /**
-     * Associates a keyword with a constant.
+     * Allows subclasses to be created.
      *
-     * <p>Enum constructors are implicitly private: constants are created once,
-     * when the enum is first loaded, and never anywhere else.
-     *
-     * @param keyword the word the user types
+     * <p>A command holds only whatever its own subclass needs, so there is
+     * nothing to set up here.
      */
-    Command(String keyword) {
-        this.keyword = keyword;
+    protected Command() {
     }
 
     /**
-     * Returns the word the user types to invoke this command.
+     * Carries out this command.
      *
-     * @return the keyword, e.g. {@code "delete"}
+     * <p>Each of the three collaborators is handed in rather than looked up, so a
+     * command can be carried out against any task list, any user interface and
+     * any save file — which is also what makes one testable on its own.
+     *
+     * @param tasks   the task list to act on
+     * @param ui      how to tell the user what happened
+     * @param storage where to record a change to the task list
+     * @throws ChioneException if the command cannot be carried out
      */
-    public String getKeyword() {
-        return keyword;
-    }
+    public abstract void execute(TaskList tasks, Ui ui, Storage storage) throws ChioneException;
 
     /**
-     * Returns everything after this command's keyword, e.g. {@code "2"} from
-     * {@code "delete 2"} or the empty string from {@code "delete"}.
+     * Reports whether the conversation should end after this command.
      *
-     * @param input one line of user input, already trimmed and known to invoke this command
-     * @return the arguments, trimmed
+     * <p>Only {@link ExitCommand} answers yes, so the answer is given once here
+     * rather than repeated in every other subclass.
+     *
+     * @return {@code true} if Chione should stop reading commands
      */
-    public String argumentsOf(String input) {
-        return input.substring(keyword.length()).trim();
+    public boolean isExit() {
+        return false;
     }
 }

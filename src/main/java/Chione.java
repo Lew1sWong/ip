@@ -1,17 +1,16 @@
-import java.time.LocalDate;
-
 /**
  * The Chione chatbot.
  *
  * <p>Chione tracks three kinds of task (todo, deadline and event), and can list,
- * mark, unmark, delete and search them by date. Each line of input is matched to
- * a {@link Command} and carried out; anything it cannot carry out is reported as
- * a {@link ChioneException} and explained to the user, so the conversation
- * continues until {@code bye}.
+ * mark, unmark, delete and search them by date. Each line of input is turned by
+ * {@link Parser} into a {@link Command}, which then carries itself out; anything
+ * that cannot be carried out is reported as a {@link ChioneException} and
+ * explained to the user, so the conversation continues until {@code bye}.
  *
- * <p>This class now does very little itself. It owns a {@link Ui}, a
- * {@link Storage} and a {@link TaskList}, and its job is to decide which of them
- * to call and in what order — not to print, to parse, or to manage a collection.
+ * <p>This class does very little itself. It owns a {@link Ui}, a {@link Storage}
+ * and a {@link TaskList}, and hands all three to whichever command it was given.
+ * It has no branch per command and no knowledge of what any command does, so a
+ * new command can be added without this file changing at all.
  */
 public class Chione {
     /**
@@ -52,22 +51,17 @@ public class Chione {
         ui.showWelcome();
         this.tasks = loadTasks();
 
-        while (ui.hasNextCommand()) {
+        boolean isExit = false;
+
+        // hasNextCommand() also stops the loop when the input runs out without a
+        // "bye" -- when a script is piped in, or the user presses Ctrl+D.
+        while (!isExit && ui.hasNextCommand()) {
             String input = ui.readCommand();
 
             try {
-                Command command = Parser.parseCommand(input);
-                if (command == Command.BYE) {
-                    break;
-                }
-
-                handleCommand(command, input);
-
-                // Saving here, once, keeps the file in step with the list without
-                // every branch of handleCommand having to remember to do it.
-                // Commands such as "list" change nothing and so rewrite an
-                // identical file, which is cheap at this size and never wrong.
-                storage.save(tasks);
+                Command command = Parser.parse(input);
+                command.execute(tasks, ui, storage);
+                isExit = command.isExit();
             } catch (ChioneException e) {
                 // Every anticipated problem arrives here with a message already
                 // phrased for the user, so one catch block covers them all and
@@ -95,67 +89,6 @@ public class Chione {
             ui.showLoadingError(e.getMessage());
             return new TaskList();
         }
-    }
-
-    /**
-     * Carries out an already-identified command.
-     *
-     * <p>Switching on the enum lets each branch be labelled with the command it
-     * serves rather than with a string comparison, and the arrow form has no
-     * fall-through, so a missing {@code break} cannot silently run the next branch.
-     *
-     * @param command the command the user invoked
-     * @param input   the full line of user input, already trimmed
-     * @throws ChioneException if the command's arguments are unusable
-     */
-    private void handleCommand(Command command, String input) throws ChioneException {
-        // Stripping the keyword once here means the branches below deal only with
-        // what the user typed after it.
-        String arguments = command.argumentsOf(input);
-
-        switch (command) {
-        case LIST -> ui.showTasks(tasks);
-        case ON -> showTasksOn(arguments);
-        case MARK -> {
-            Task task = tasks.get(Parser.parseTaskNumber(arguments, command, tasks.size()));
-            task.markAsDone();
-            ui.showMarked(task);
-        }
-        case UNMARK -> {
-            Task task = tasks.get(Parser.parseTaskNumber(arguments, command, tasks.size()));
-            task.markAsNotDone();
-            ui.showUnmarked(task);
-        }
-        case DELETE -> {
-            Task removed = tasks.remove(Parser.parseTaskNumber(arguments, command, tasks.size()));
-            ui.showRemoved(removed, tasks.size());
-        }
-        case TODO -> addTask(Parser.parseTodo(arguments));
-        case DEADLINE -> addTask(Parser.parseDeadline(arguments));
-        case EVENT -> addTask(Parser.parseEvent(arguments));
-        default -> throw new ChioneException("I have not learnt to do that yet.");
-        }
-    }
-
-    /**
-     * Stores a newly created task and tells the user about it.
-     *
-     * @param task the task to store
-     */
-    private void addTask(Task task) {
-        tasks.add(task);
-        ui.showAdded(task, tasks.size());
-    }
-
-    /**
-     * Shows every task falling on one particular day.
-     *
-     * @param arguments everything typed after {@code on}, e.g. {@code "2019-10-15"}
-     * @throws ChioneException if no day was given, or it is not a readable date
-     */
-    private void showTasksOn(String arguments) throws ChioneException {
-        LocalDate date = Parser.parseDate(arguments);
-        ui.showTasksOn(tasks.findOn(date), DateTimes.formatDate(date));
     }
 
     /**

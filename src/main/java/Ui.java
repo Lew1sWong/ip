@@ -187,8 +187,14 @@ public class Ui {
     private static String[] numbered(String heading, TaskList tasks) {
         String[] lines = new String[tasks.size() + 1];
         lines[0] = heading;
-        for (int i = 0; i < tasks.size(); i++) {
-            lines[i + 1] = (i + 1) + "." + tasks.get(i); // the user counts from 1
+
+        // Read straight through the tasks rather than asking for them by
+        // position: every position here is known to be valid, so there is no
+        // out-of-range answer to deal with.
+        int lineNumber = 1;
+        for (Task task : tasks.asList()) {
+            lines[lineNumber] = lineNumber + "." + task; // the user counts from 1
+            lineNumber++;
         }
         return lines;
     }

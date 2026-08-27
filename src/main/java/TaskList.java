@@ -46,8 +46,10 @@ public class TaskList {
      *
      * @param index zero-based position of the task
      * @return the task that was removed
+     * @throws ChioneException if there is no task at that position
      */
-    public Task remove(int index) {
+    public Task remove(int index) throws ChioneException {
+        checkIndex(index);
         return tasks.remove(index);
     }
 
@@ -56,9 +58,31 @@ public class TaskList {
      *
      * @param index zero-based position of the task
      * @return the task found there
+     * @throws ChioneException if there is no task at that position
      */
-    public Task get(int index) {
+    public Task get(int index) throws ChioneException {
+        checkIndex(index);
         return tasks.get(index);
+    }
+
+    /**
+     * Refuses a position that is not in the list.
+     *
+     * <p>The list is the only thing that knows how long it is, so it is the right
+     * place to answer this. Checking here also means the answer cannot drift out
+     * of step with the list, however the number reaching it was arrived at.
+     *
+     * <p>The message counts from 1, because that is how the tasks were numbered
+     * when the user saw them.
+     *
+     * @param index zero-based position to check
+     * @throws ChioneException if there is no task at that position
+     */
+    private void checkIndex(int index) throws ChioneException {
+        if (index < 0 || index >= tasks.size()) {
+            throw new ChioneException("There is no task " + (index + 1) + ". "
+                    + "Your list has " + tasks.size() + " task(s) right now.");
+        }
     }
 
     /**

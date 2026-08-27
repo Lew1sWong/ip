@@ -5,9 +5,8 @@ import java.time.LocalDate;
  *
  * <p>Every piece of knowledge about the shape of a command lives here: which
  * keyword starts it, where {@code /by} splits a deadline, and what counts as a
- * usable task number. {@link Chione} is left to decide what to <em>do</em> with
- * the result, and {@link Command} is left as a plain list of the words Chione
- * knows, with no parsing of its own.
+ * usable task number. What comes back is a {@link Command} that already knows how
+ * to carry itself out, so {@link Chione} never has to ask what it was handed.
  *
  * <p>Gathering the checks here also gathers the error messages here, so the
  * advice offered when a command is mistyped stays consistent across commands.
@@ -21,19 +20,52 @@ public final class Parser {
     }
 
     /**
-     * Works out which command a line of input invokes.
+     * Turns one line of input into the command it asks for.
+     *
+     * <p>The switch covers every {@link CommandType}, and covers it by name rather
+     * than with a fallback branch. A command word added to the enum therefore
+     * stops this file compiling until it is given a command to produce here,
+     * which is a far better reminder than an error at run time would be.
+     *
+     * @param input one line of user input, already trimmed
+     * @return the command the user asked for
+     * @throws ChioneException if the line does not name a command, or its
+     *                         arguments cannot be used
+     */
+    public static Command parse(String input) throws ChioneException {
+        CommandType type = parseType(input);
+
+        // Stripping the keyword once here means the branches below deal only with
+        // what the user typed after it.
+        String arguments = type.argumentsOf(input);
+
+        return switch (type) {
+        case TODO -> new AddCommand(parseTodo(arguments));
+        case DEADLINE -> new AddCommand(parseDeadline(arguments));
+        case EVENT -> new AddCommand(parseEvent(arguments));
+        case LIST -> new ListCommand();
+        case ON -> new OnCommand(parseDate(arguments));
+        case MARK -> new MarkCommand(parseTaskNumber(arguments, type));
+        case UNMARK -> new UnmarkCommand(parseTaskNumber(arguments, type));
+        case DELETE -> new DeleteCommand(parseTaskNumber(arguments, type));
+        case BYE -> new ExitCommand();
+        };
+    }
+
+    /**
+     * Works out which command word a line of input starts with.
      *
      * <p>A keyword on its own counts as a match, as well as a keyword followed by
      * arguments. That is what lets a bare {@code "todo"} be reported as a missing
      * description rather than as an unknown command.
      *
      * @param input one line of user input, already trimmed
-     * @return the matching command
+     * @return the matching command word
      * @throws ChioneException if no command matches
      */
-    public static Command parseCommand(String input) throws ChioneException {
+    private static CommandType parseType(String input) throws ChioneException {
         // values() returns every constant of the enum, in the order declared.
-        for (Command command : Command.values()) {
+        for (CommandType command : CommandType.values()) {
             String keyword = command.getKeyword();
             if (input.equals(keyword) || input.startsWith(keyword + " ")) {
                 return command;
@@ -132,13 +164,16 @@ public final class Parser {
      * <p>The user counts tasks from 1 but the list is indexed from 0, so the
      * number typed is decremented by one.
      *
+     * <p>Whether the number actually points at a task is not decided here:
+     * {@link TaskList} knows how long it is and refuses a position it does not
+     * hold. This method only insists that a number was given at all.
+     *
      * @param arguments everything typed after the keyword, e.g. {@code "2"}
      * @param command   the command being carried out, quoted back in error messages
-     * @param taskCount how many tasks exist, used to check the number is in range
      * @return the index into the task list
-     * @throws ChioneException if the number is missing, not a number, or outside the list
+     * @throws ChioneException if the number is missing or is not a number
      */
-    public static int parseTaskNumber(String arguments, Command command, int taskCount)
+    public static int parseTaskNumber(String arguments, CommandType command)
             throws ChioneException {
         String keyword = command.getKeyword();
         if (arguments.isEmpty()) {
@@ -156,10 +191,6 @@ public final class Parser {
                     + "Try: " + keyword + " 2");
         }
 
-        if (taskNumber < 1 || taskNumber > taskCount) {
-            throw new ChioneException("There is no task " + taskNumber + ". "
-                    + "Your list has " + taskCount + " task(s) right now.");
-        }
         return taskNumber - 1;
     }
 
@@ -191,7 +222,7 @@ public final class Parser {
      */
     private static String listKeywords() {
         StringBuilder keywords = new StringBuilder();
-        for (Command command : Command.values()) {
+        for (CommandType command : CommandType.values()) {
             if (!keywords.isEmpty()) {
                 keywords.append(", ");
             }
