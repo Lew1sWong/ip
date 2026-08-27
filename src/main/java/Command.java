@@ -2,9 +2,12 @@
  * The set of instructions Chione understands.
  *
  * <p>Each constant owns the keyword the user types to invoke it, so the list of
- * valid commands exists in exactly one place: adding a command here makes it
- * recognised, quotable in error messages, and checkable by the compiler in the
- * switch that carries commands out.
+ * valid commands exists in exactly one place: adding a command here is enough
+ * for {@link Parser} to recognise it and quote it in error messages, and for the
+ * compiler to demand a branch for it in the switch that carries commands out.
+ *
+ * <p>Recognising which keyword was typed is {@link Parser}'s job, not this
+ * enum's. What is left here is the vocabulary itself.
  *
  * <p>An enum is used rather than string constants because a {@code Command} can
  * only ever hold one of these nine values. A typo like {@code Command.LITS}
@@ -64,28 +67,6 @@ public enum Command {
     }
 
     /**
-     * Works out which command a line of input invokes.
-     *
-     * <p>A keyword on its own counts as a match, as well as a keyword followed by
-     * arguments. That is what lets a bare {@code "todo"} be reported as a missing
-     * description rather than as an unknown command.
-     *
-     * @param input one line of user input, already trimmed
-     * @return the matching command
-     * @throws ChioneException if no command matches
-     */
-    public static Command parse(String input) throws ChioneException {
-        // values() returns every constant declared above, in order.
-        for (Command command : values()) {
-            if (input.equals(command.keyword) || input.startsWith(command.keyword + " ")) {
-                return command;
-            }
-        }
-        throw new ChioneException("I don't know what \"" + input + "\" means. "
-                + "I understand: " + listKeywords() + ".");
-    }
-
-    /**
      * Returns everything after this command's keyword, e.g. {@code "2"} from
      * {@code "delete 2"} or the empty string from {@code "delete"}.
      *
@@ -94,22 +75,5 @@ public enum Command {
      */
     public String argumentsOf(String input) {
         return input.substring(keyword.length()).trim();
-    }
-
-    /**
-     * Returns every keyword as a comma-separated list, for use in error messages.
-     *
-     * <p>Building this from {@code values()} keeps the message honest: a command
-     * added later shows up here without anyone having to remember to update it.
-     */
-    private static String listKeywords() {
-        StringBuilder keywords = new StringBuilder();
-        for (Command command : values()) {
-            if (!keywords.isEmpty()) {
-                keywords.append(", ");
-            }
-            keywords.append(command.keyword);
-        }
-        return keywords.toString();
     }
 }

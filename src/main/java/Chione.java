@@ -56,7 +56,7 @@ public class Chione {
             String input = ui.readCommand();
 
             try {
-                Command command = Command.parse(input);
+                Command command = Parser.parseCommand(input);
                 if (command == Command.BYE) {
                     break;
                 }
@@ -117,22 +117,22 @@ public class Chione {
         case LIST -> ui.showTasks(tasks);
         case ON -> showTasksOn(arguments);
         case MARK -> {
-            Task task = tasks.get(parseTaskNumber(arguments, command, tasks.size()));
+            Task task = tasks.get(Parser.parseTaskNumber(arguments, command, tasks.size()));
             task.markAsDone();
             ui.showMarked(task);
         }
         case UNMARK -> {
-            Task task = tasks.get(parseTaskNumber(arguments, command, tasks.size()));
+            Task task = tasks.get(Parser.parseTaskNumber(arguments, command, tasks.size()));
             task.markAsNotDone();
             ui.showUnmarked(task);
         }
         case DELETE -> {
-            Task removed = tasks.remove(parseTaskNumber(arguments, command, tasks.size()));
+            Task removed = tasks.remove(Parser.parseTaskNumber(arguments, command, tasks.size()));
             ui.showRemoved(removed, tasks.size());
         }
-        case TODO -> addTask(createTodo(arguments));
-        case DEADLINE -> addTask(createDeadline(arguments));
-        case EVENT -> addTask(createEvent(arguments));
+        case TODO -> addTask(Parser.parseTodo(arguments));
+        case DEADLINE -> addTask(Parser.parseDeadline(arguments));
+        case EVENT -> addTask(Parser.parseEvent(arguments));
         default -> throw new ChioneException("I have not learnt to do that yet.");
         }
     }
@@ -154,132 +154,8 @@ public class Chione {
      * @throws ChioneException if no day was given, or it is not a readable date
      */
     private void showTasksOn(String arguments) throws ChioneException {
-        if (arguments.isEmpty()) {
-            throw new ChioneException("Tell me which day to look at. Try: on 2019-10-15");
-        }
-
-        LocalDate date = DateTimes.parseDate(arguments);
+        LocalDate date = Parser.parseDate(arguments);
         ui.showTasksOn(tasks.findOn(date), DateTimes.formatDate(date));
-    }
-
-    /**
-     * Builds a todo from the arguments of a {@code todo} command,
-     * e.g. {@code "borrow book"}.
-     *
-     * @param description everything typed after the keyword
-     * @return the new todo
-     * @throws ChioneException if no description was given
-     */
-    private static Todo createTodo(String description) throws ChioneException {
-        if (description.isEmpty()) {
-            throw new ChioneException("A todo needs a description. Try: todo borrow book");
-        }
-        return new Todo(description);
-    }
-
-    /**
-     * Builds a deadline from the arguments of a {@code deadline} command,
-     * e.g. {@code "return book /by 2019-10-15"}.
-     *
-     * @param arguments everything typed after the keyword
-     * @return the new deadline
-     * @throws ChioneException if the description or the due date is missing or unreadable
-     */
-    private static Deadline createDeadline(String arguments) throws ChioneException {
-        // The limit of 2 stops the split at the first " /by ", so a description
-        // that itself contains " /by " is kept intact. The space glued on the
-        // front lets "deadline /by Sunday" split as well, so its empty
-        // description is reported as such rather than as a missing due date.
-        String[] parts = (" " + arguments).split(" /by ", 2);
-        if (parts.length < 2) {
-            throw new ChioneException("A deadline needs a due date after /by. "
-                    + "Try: deadline return book /by Sunday");
-        }
-
-        String description = parts[0].trim();
-        String by = parts[1].trim();
-        if (description.isEmpty()) {
-            throw new ChioneException("A deadline needs a description before /by. "
-                    + "Try: deadline return book /by Sunday");
-        }
-        if (by.isEmpty()) {
-            throw new ChioneException("Tell me when it is due after /by. "
-                    + "Try: deadline return book /by Sunday");
-        }
-        // DateTimes.parse rejects anything that is not a date it can read, so a
-        // Deadline can never be built around text that only looks like one.
-        return new Deadline(description, DateTimes.parse(by));
-    }
-
-    /**
-     * Builds an event from the arguments of an {@code event} command,
-     * e.g. {@code "meeting /from 2019-10-15 1400 /to 2019-10-15 1600"}.
-     *
-     * @param arguments everything typed after the keyword
-     * @return the new event
-     * @throws ChioneException if the description, the start or the end is missing or unreadable
-     */
-    private static Event createEvent(String arguments) throws ChioneException {
-        // Peel off the description first, then the start time, leaving the end time.
-        // The glued-on spaces serve the same purpose as in createDeadline.
-        String[] descriptionAndRest = (" " + arguments).split(" /from ", 2);
-        if (descriptionAndRest.length < 2) {
-            throw new ChioneException("An event needs a start time after /from. "
-                    + "Try: event project meeting /from Mon 2pm /to 4pm");
-        }
-
-        String[] fromAndTo = (" " + descriptionAndRest[1]).split(" /to ", 2);
-        if (fromAndTo.length < 2) {
-            throw new ChioneException("An event needs an end time after /to. "
-                    + "Try: event project meeting /from Mon 2pm /to 4pm");
-        }
-
-        String description = descriptionAndRest[0].trim();
-        String from = fromAndTo[0].trim();
-        String to = fromAndTo[1].trim();
-        if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
-            throw new ChioneException("An event needs a description, a start and an end. "
-                    + "Try: event project meeting /from Mon 2pm /to 4pm");
-        }
-        return new Event(description, DateTimes.parse(from), DateTimes.parse(to));
-    }
-
-    /**
-     * Extracts the list index of the task referred to by a command such as
-     * {@code mark}, {@code unmark} or {@code delete}.
-     *
-     * <p>The user counts tasks from 1 but the list is indexed from 0, so the
-     * number typed is decremented by one.
-     *
-     * @param arguments everything typed after the keyword, e.g. {@code "2"}
-     * @param command   the command being carried out, quoted back in error messages
-     * @param taskCount how many tasks exist, used to check the number is in range
-     * @return the index into the task list
-     * @throws ChioneException if the number is missing, not a number, or outside the list
-     */
-    private static int parseTaskNumber(String arguments, Command command, int taskCount)
-            throws ChioneException {
-        String keyword = command.getKeyword();
-        if (arguments.isEmpty()) {
-            throw new ChioneException("Tell me which task to " + keyword + ". "
-                    + "Try: " + keyword + " 2");
-        }
-
-        int taskNumber;
-        try {
-            taskNumber = Integer.parseInt(arguments);
-        } catch (NumberFormatException e) {
-            // Integer.parseInt reports a parsing failure; the user needs to be told
-            // what to type instead, so the low-level exception is translated here.
-            throw new ChioneException("\"" + arguments + "\" is not a task number. "
-                    + "Try: " + keyword + " 2");
-        }
-
-        if (taskNumber < 1 || taskNumber > taskCount) {
-            throw new ChioneException("There is no task " + taskNumber + ". "
-                    + "Your list has " + taskCount + " task(s) right now.");
-        }
-        return taskNumber - 1;
     }
 
     /**
