@@ -5,9 +5,8 @@ import java.time.LocalDate;
  *
  * <p>Every piece of knowledge about the shape of a command lives here: which
  * keyword starts it, where {@code /by} splits a deadline, and what counts as a
- * usable task number. {@link Chione} is left to decide what to <em>do</em> with
- * the result, and {@link CommandType} is left as a plain list of the words Chione
- * knows, with no parsing of its own.
+ * usable task number. What comes back is a {@link Command} that already knows how
+ * to carry itself out, so {@link Chione} never has to ask what it was handed.
  *
  * <p>Gathering the checks here also gathers the error messages here, so the
  * advice offered when a command is mistyped stays consistent across commands.
@@ -21,17 +20,50 @@ public final class Parser {
     }
 
     /**
-     * Works out which command a line of input invokes.
+     * Turns one line of input into the command it asks for.
+     *
+     * <p>The switch covers every {@link CommandType}, and covers it by name rather
+     * than with a fallback branch. A command word added to the enum therefore
+     * stops this file compiling until it is given a command to produce here,
+     * which is a far better reminder than an error at run time would be.
+     *
+     * @param input one line of user input, already trimmed
+     * @return the command the user asked for
+     * @throws ChioneException if the line does not name a command, or its
+     *                         arguments cannot be used
+     */
+    public static Command parse(String input) throws ChioneException {
+        CommandType type = parseType(input);
+
+        // Stripping the keyword once here means the branches below deal only with
+        // what the user typed after it.
+        String arguments = type.argumentsOf(input);
+
+        return switch (type) {
+        case TODO -> new AddCommand(parseTodo(arguments));
+        case DEADLINE -> new AddCommand(parseDeadline(arguments));
+        case EVENT -> new AddCommand(parseEvent(arguments));
+        case LIST -> new ListCommand();
+        case ON -> new OnCommand(parseDate(arguments));
+        case MARK -> new MarkCommand(parseTaskNumber(arguments, type));
+        case UNMARK -> new UnmarkCommand(parseTaskNumber(arguments, type));
+        case DELETE -> new DeleteCommand(parseTaskNumber(arguments, type));
+        case BYE -> new ExitCommand();
+        };
+    }
+
+    /**
+     * Works out which command word a line of input starts with.
      *
      * <p>A keyword on its own counts as a match, as well as a keyword followed by
      * arguments. That is what lets a bare {@code "todo"} be reported as a missing
      * description rather than as an unknown command.
      *
      * @param input one line of user input, already trimmed
-     * @return the matching command
+     * @return the matching command word
      * @throws ChioneException if no command matches
      */
-    public static CommandType parseCommand(String input) throws ChioneException {
+    private static CommandType parseType(String input) throws ChioneException {
         // values() returns every constant of the enum, in the order declared.
         for (CommandType command : CommandType.values()) {
             String keyword = command.getKeyword();
