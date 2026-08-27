@@ -1,5 +1,5 @@
 /**
- * The set of instructions Chione understands.
+ * The words Chione understands at the start of a line.
  *
  * <p>Each constant owns the keyword the user types to invoke it, so the list of
  * valid commands exists in exactly one place: adding a command here is enough
@@ -9,12 +9,12 @@
  * <p>Recognising which keyword was typed is {@link Parser}'s job, not this
  * enum's. What is left here is the vocabulary itself.
  *
- * <p>An enum is used rather than string constants because a {@code Command} can
- * only ever hold one of these nine values. A typo like {@code Command.LITS}
+ * <p>An enum is used rather than string constants because a {@code CommandType} can
+ * only ever hold one of these nine values. A typo like {@code CommandType.LITS}
  * fails to compile, whereas the string {@code "lits"} would compile happily and
  * simply never match anything at runtime.
  */
-public enum Command {
+public enum CommandType {
     /** Adds a task with no date attached. */
     TODO("todo"),
 
@@ -53,7 +53,7 @@ public enum Command {
      *
      * @param keyword the word the user types
      */
-    Command(String keyword) {
+    CommandType(String keyword) {
         this.keyword = keyword;
     }
 

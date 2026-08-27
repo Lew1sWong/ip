@@ -6,7 +6,7 @@ import java.time.LocalDate;
  * <p>Every piece of knowledge about the shape of a command lives here: which
  * keyword starts it, where {@code /by} splits a deadline, and what counts as a
  * usable task number. {@link Chione} is left to decide what to <em>do</em> with
- * the result, and {@link Command} is left as a plain list of the words Chione
+ * the result, and {@link CommandType} is left as a plain list of the words Chione
  * knows, with no parsing of its own.
  *
  * <p>Gathering the checks here also gathers the error messages here, so the
@@ -31,9 +31,9 @@ public final class Parser {
      * @return the matching command
      * @throws ChioneException if no command matches
      */
-    public static Command parseCommand(String input) throws ChioneException {
+    public static CommandType parseCommand(String input) throws ChioneException {
         // values() returns every constant of the enum, in the order declared.
-        for (Command command : Command.values()) {
+        for (CommandType command : CommandType.values()) {
             String keyword = command.getKeyword();
             if (input.equals(keyword) || input.startsWith(keyword + " ")) {
                 return command;
@@ -141,7 +141,7 @@ public final class Parser {
      * @return the index into the task list
      * @throws ChioneException if the number is missing or is not a number
      */
-    public static int parseTaskNumber(String arguments, Command command)
+    public static int parseTaskNumber(String arguments, CommandType command)
             throws ChioneException {
         String keyword = command.getKeyword();
         if (arguments.isEmpty()) {
@@ -190,7 +190,7 @@ public final class Parser {
      */
     private static String listKeywords() {
         StringBuilder keywords = new StringBuilder();
-        for (Command command : Command.values()) {
+        for (CommandType command : CommandType.values()) {
             if (!keywords.isEmpty()) {
                 keywords.append(", ");
             }

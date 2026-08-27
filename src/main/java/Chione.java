@@ -5,7 +5,7 @@ import java.time.LocalDate;
  *
  * <p>Chione tracks three kinds of task (todo, deadline and event), and can list,
  * mark, unmark, delete and search them by date. Each line of input is matched to
- * a {@link Command} and carried out; anything it cannot carry out is reported as
+ * a {@link CommandType} and carried out; anything it cannot carry out is reported as
  * a {@link ChioneException} and explained to the user, so the conversation
  * continues until {@code bye}.
  *
@@ -56,8 +56,8 @@ public class Chione {
             String input = ui.readCommand();
 
             try {
-                Command command = Parser.parseCommand(input);
-                if (command == Command.BYE) {
+                CommandType command = Parser.parseCommand(input);
+                if (command == CommandType.BYE) {
                     break;
                 }
 
@@ -108,7 +108,7 @@ public class Chione {
      * @param input   the full line of user input, already trimmed
      * @throws ChioneException if the command's arguments are unusable
      */
-    private void handleCommand(Command command, String input) throws ChioneException {
+    private void handleCommand(CommandType command, String input) throws ChioneException {
         // Stripping the keyword once here means the branches below deal only with
         // what the user typed after it.
         String arguments = command.argumentsOf(input);
