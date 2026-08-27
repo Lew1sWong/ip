@@ -19,6 +19,7 @@ It is built as the individual project (iP) for CS2103/T.
 | `deadline DESCRIPTION /by WHEN`                  | Adds a task due by a given time   |
 | `event DESCRIPTION /from START /to END`          | Adds a task spanning two times    |
 | `list`                                           | Shows every task                  |
+| `on DATE`                                        | Shows the tasks falling on a day  |
 | `mark INDEX` / `unmark INDEX`                    | Marks a task as done / not done   |
 | `delete INDEX`                                   | Removes a task                    |
 | `bye`                                            | Ends the conversation             |
@@ -27,6 +28,9 @@ It is built as the individual project (iP) for CS2103/T.
 
 Write a date as `2019-10-15`, or as `2019-10-15 1800` to include a time of day.
 Chione shows it back in a friendlier form, e.g. `Oct 15 2019, 6:00pm`.
+
+`on 2019-10-15` lists everything happening that day: deadlines falling on it, and
+events running over it, including ones that started on an earlier day.
 
 ### Saving
 

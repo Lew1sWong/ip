@@ -7,7 +7,7 @@
  * switch that carries commands out.
  *
  * <p>An enum is used rather than string constants because a {@code Command} can
- * only ever hold one of these eight values. A typo like {@code Command.LITS}
+ * only ever hold one of these nine values. A typo like {@code Command.LITS}
  * fails to compile, whereas the string {@code "lits"} would compile happily and
  * simply never match anything at runtime.
  */
@@ -23,6 +23,9 @@ public enum Command {
 
     /** Shows every stored task. */
     LIST("list"),
+
+    /** Shows the tasks falling on one particular day. */
+    ON("on"),
 
     /** Marks a task as done. */
     MARK("mark"),

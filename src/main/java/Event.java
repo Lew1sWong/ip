@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -25,6 +26,19 @@ public class Event extends Task {
         super(description);
         this.from = from;
         this.to = to;
+    }
+
+    /**
+     * Reports whether this event is running on the given day.
+     *
+     * <p>An event can span several days, so the day counts as a match when it
+     * falls anywhere between the start and the end, both included. That is
+     * written as "not before the start and not after the end" because
+     * {@link LocalDate} offers no single "is between" test.
+     */
+    @Override
+    public boolean occursOn(LocalDate date) {
+        return !date.isBefore(from.toLocalDate()) && !date.isAfter(to.toLocalDate());
     }
 
     /** Returns the task prefixed with its type icon and followed by its time range. */
