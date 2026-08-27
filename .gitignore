@@ -21,3 +21,6 @@ text-ui-test/EXPECTED-UNIX.TXT
 
 # Compiled Java class files
 *.class
+
+# Task data saved at runtime (user data, not source)
+/data/
