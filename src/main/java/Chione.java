@@ -1,19 +1,19 @@
 import java.time.LocalDate;
-import java.util.Scanner;
 
 /**
- * Entry point of the Chione chatbot.
+ * The Chione chatbot.
  *
  * <p>Chione tracks three kinds of task (todo, deadline and event), and can list,
- * mark, unmark and delete them. Each line of input is matched to a {@link Command}
- * and carried out; anything it cannot carry out is reported as a
- * {@link ChioneException} and explained to the user, so the conversation
+ * mark, unmark, delete and search them by date. Each line of input is matched to
+ * a {@link Command} and carried out; anything it cannot carry out is reported as
+ * a {@link ChioneException} and explained to the user, so the conversation
  * continues until {@code bye}.
+ *
+ * <p>This class now does very little itself. It owns a {@link Ui}, a
+ * {@link Storage} and a {@link TaskList}, and its job is to decide which of them
+ * to call and in what order — not to print, to parse, or to manage a collection.
  */
 public class Chione {
-    /** Horizontal divider printed above and below each block of output. */
-    private static final String DIVIDER = "    ____________________________________________________________";
-
     /**
      * Where the task list is kept between runs.
      *
@@ -23,20 +23,37 @@ public class Chione {
      */
     private static final String SAVE_FILE_PATH = "data/chione.txt";
 
-    public static void main(String[] args) {
-        printGreeting();
+    /** Everything the user sees, and everything they type. */
+    private final Ui ui;
 
-        Storage storage = new Storage(SAVE_FILE_PATH);
-        TaskList tasks = loadTasks(storage);
+    /** Where the tasks are read from and written back to. */
+    private final Storage storage;
 
-        // Scanner reads the user's input from standard input (the console), one line at a time.
-        Scanner scanner = new Scanner(System.in);
+    /** The tasks being tracked; replaced by the saved ones when the run starts. */
+    private TaskList tasks;
 
-        // hasNextLine() guards against the input stream ending without a "bye"
-        // (e.g. when input is piped in from a file, or the user presses Ctrl+D).
-        // Without it, nextLine() would throw a NoSuchElementException.
-        while (scanner.hasNextLine()) {
-            String input = scanner.nextLine().trim();
+    /**
+     * Prepares a chatbot that will keep its tasks in the given file.
+     *
+     * <p>Nothing is read from disk yet: loading happens in {@link #run()}, so that
+     * the greeting appears before any complaint about the save file rather than
+     * after it.
+     *
+     * @param filePath where to keep the tasks, e.g. {@code "data/chione.txt"}
+     */
+    public Chione(String filePath) {
+        this.ui = new Ui();
+        this.storage = new Storage(filePath);
+        this.tasks = new TaskList();
+    }
+
+    /** Greets the user, then answers commands until they say goodbye. */
+    public void run() {
+        ui.showWelcome();
+        this.tasks = loadTasks();
+
+        while (ui.hasNextCommand()) {
+            String input = ui.readCommand();
 
             try {
                 Command command = Command.parse(input);
@@ -44,9 +61,7 @@ public class Chione {
                     break;
                 }
 
-                // The list object itself is passed along, so any change made inside
-                // is visible here without a count having to be handed back.
-                handleCommand(command, input, tasks);
+                handleCommand(command, input);
 
                 // Saving here, once, keeps the file in step with the list without
                 // every branch of handleCommand having to remember to do it.
@@ -57,12 +72,12 @@ public class Chione {
                 // Every anticipated problem arrives here with a message already
                 // phrased for the user, so one catch block covers them all and
                 // the conversation carries on instead of crashing.
-                printBlock(e.getMessage());
+                ui.showError(e.getMessage());
             }
         }
 
-        scanner.close();
-        printFarewell();
+        ui.close();
+        ui.showGoodbye();
     }
 
     /**
@@ -71,16 +86,13 @@ public class Chione {
      * <p>Chione is still usable without its save file, so a loading problem is
      * reported and stepped over rather than allowed to stop the program.
      *
-     * @param storage where the tasks are kept
      * @return the stored tasks, or an empty list if they could not be loaded
      */
-    private static TaskList loadTasks(Storage storage) {
+    private TaskList loadTasks() {
         try {
             return new TaskList(storage.load());
         } catch (ChioneException e) {
-            printBlock(e.getMessage(),
-                    "I'll start with an empty list. Note that saving anything new",
-                    "will replace that file, so rescue it first if you need it.");
+            ui.showLoadingError(e.getMessage());
             return new TaskList();
         }
     }
@@ -94,39 +106,33 @@ public class Chione {
      *
      * @param command the command the user invoked
      * @param input   the full line of user input, already trimmed
-     * @param tasks   the task list, modified in place
      * @throws ChioneException if the command's arguments are unusable
      */
-    private static void handleCommand(Command command, String input, TaskList tasks)
-            throws ChioneException {
+    private void handleCommand(Command command, String input) throws ChioneException {
         // Stripping the keyword once here means the branches below deal only with
         // what the user typed after it.
         String arguments = command.argumentsOf(input);
 
         switch (command) {
-        case LIST -> printTasks(tasks);
-        case ON -> printTasksOn(arguments, tasks);
+        case LIST -> ui.showTasks(tasks);
+        case ON -> showTasksOn(arguments);
         case MARK -> {
             Task task = tasks.get(parseTaskNumber(arguments, command, tasks.size()));
             task.markAsDone();
-            printBlock("Nice! I've marked this task as done:", "  " + task);
+            ui.showMarked(task);
         }
         case UNMARK -> {
             Task task = tasks.get(parseTaskNumber(arguments, command, tasks.size()));
             task.markAsNotDone();
-            printBlock("OK, I've marked this task as not done yet:", "  " + task);
+            ui.showUnmarked(task);
         }
         case DELETE -> {
-            // remove() both takes the task out and hands it back, so it can still
-            // be shown to the user after it has left the list.
             Task removed = tasks.remove(parseTaskNumber(arguments, command, tasks.size()));
-            printBlock("Noted. I've removed this task:",
-                    "  " + removed,
-                    "Now you have " + tasks.size() + " tasks in the list.");
+            ui.showRemoved(removed, tasks.size());
         }
-        case TODO -> addTask(tasks, createTodo(arguments));
-        case DEADLINE -> addTask(tasks, createDeadline(arguments));
-        case EVENT -> addTask(tasks, createEvent(arguments));
+        case TODO -> addTask(createTodo(arguments));
+        case DEADLINE -> addTask(createDeadline(arguments));
+        case EVENT -> addTask(createEvent(arguments));
         default -> throw new ChioneException("I have not learnt to do that yet.");
         }
     }
@@ -134,17 +140,26 @@ public class Chione {
     /**
      * Stores a newly created task and tells the user about it.
      *
-     * @param tasks the task list, modified in place
-     * @param task  the task to store
+     * @param task the task to store
      */
-    private static void addTask(TaskList tasks, Task task) {
+    private void addTask(Task task) {
         tasks.add(task);
+        ui.showAdded(task, tasks.size());
+    }
 
-        // "  " + task calls the task's own toString(), so the right type icon and
-        // details appear without this method knowing which subclass it holds.
-        printBlock("Got it. I've added this task:",
-                "  " + task,
-                "Now you have " + tasks.size() + " tasks in the list.");
+    /**
+     * Shows every task falling on one particular day.
+     *
+     * @param arguments everything typed after {@code on}, e.g. {@code "2019-10-15"}
+     * @throws ChioneException if no day was given, or it is not a readable date
+     */
+    private void showTasksOn(String arguments) throws ChioneException {
+        if (arguments.isEmpty()) {
+            throw new ChioneException("Tell me which day to look at. Try: on 2019-10-15");
+        }
+
+        LocalDate date = DateTimes.parseDate(arguments);
+        ui.showTasksOn(tasks.findOn(date), DateTimes.formatDate(date));
     }
 
     /**
@@ -164,11 +179,11 @@ public class Chione {
 
     /**
      * Builds a deadline from the arguments of a {@code deadline} command,
-     * e.g. {@code "return book /by Sunday"}.
+     * e.g. {@code "return book /by 2019-10-15"}.
      *
      * @param arguments everything typed after the keyword
      * @return the new deadline
-     * @throws ChioneException if the description or the due date is missing
+     * @throws ChioneException if the description or the due date is missing or unreadable
      */
     private static Deadline createDeadline(String arguments) throws ChioneException {
         // The limit of 2 stops the split at the first " /by ", so a description
@@ -198,11 +213,11 @@ public class Chione {
 
     /**
      * Builds an event from the arguments of an {@code event} command,
-     * e.g. {@code "meeting /from Mon 2pm /to 4pm"}.
+     * e.g. {@code "meeting /from 2019-10-15 1400 /to 2019-10-15 1600"}.
      *
      * @param arguments everything typed after the keyword
      * @return the new event
-     * @throws ChioneException if the description, the start or the end is missing
+     * @throws ChioneException if the description, the start or the end is missing or unreadable
      */
     private static Event createEvent(String arguments) throws ChioneException {
         // Peel off the description first, then the start time, leaving the end time.
@@ -227,57 +242,6 @@ public class Chione {
                     + "Try: event project meeting /from Mon 2pm /to 4pm");
         }
         return new Event(description, DateTimes.parse(from), DateTimes.parse(to));
-    }
-
-    /**
-     * Prints the stored tasks as a numbered list, one per line.
-     *
-     * @param tasks the task list to show
-     */
-    private static void printTasks(TaskList tasks) {
-        if (tasks.isEmpty()) {
-            printBlock("Your list is empty for now.");
-            return;
-        }
-
-        // Build the display lines first, so the whole list can be printed inside
-        // a single pair of dividers. The extra line is the heading above the list.
-        String[] lines = new String[tasks.size() + 1];
-        lines[0] = "Here are the tasks in your list:";
-        for (int i = 0; i < tasks.size(); i++) {
-            lines[i + 1] = (i + 1) + "." + tasks.get(i); // numbering shown to the user starts at 1
-        }
-        printBlock(lines);
-    }
-
-    /**
-     * Prints every task falling on one particular day.
-     *
-     * @param arguments everything typed after {@code on}, e.g. {@code "2019-10-15"}
-     * @param tasks     the task list to search
-     * @throws ChioneException if no day was given, or it is not a readable date
-     */
-    private static void printTasksOn(String arguments, TaskList tasks)
-            throws ChioneException {
-        if (arguments.isEmpty()) {
-            throw new ChioneException("Tell me which day to look at. Try: on 2019-10-15");
-        }
-
-        LocalDate date = DateTimes.parseDate(arguments);
-        String readableDate = DateTimes.formatDate(date);
-
-        TaskList matches = tasks.findOn(date);
-        if (matches.isEmpty()) {
-            printBlock("Nothing on " + readableDate + ".");
-            return;
-        }
-
-        String[] lines = new String[matches.size() + 1];
-        lines[0] = "Here is what you have on " + readableDate + ":";
-        for (int i = 0; i < matches.size(); i++) {
-            lines[i + 1] = (i + 1) + "." + matches.get(i);
-        }
-        printBlock(lines);
     }
 
     /**
@@ -318,44 +282,12 @@ public class Chione {
         return taskNumber - 1;
     }
 
-    /** Prints the banner and welcome message shown when Chione starts. */
-    private static void printGreeting() {
-        // ASCII-art banner spelling "CHIONE". Each "\\" is an escaped
-        // backslash, since a lone "\" starts an escape sequence in Java.
-        String banner = "  ____  _   _  ___   ___   _   _  _____ \n"
-                + " / ___|| | | ||_ _| / _ \\ | \\ | || ____|\n"
-                + "| |    | |_| | | | | | | ||  \\| ||  _|  \n"
-                + "| |___ |  _  | | | | |_| || |\\  || |___ \n"
-                + " \\____||_| |_||___| \\___/ |_| \\_||_____|\n";
-
-        System.out.println(DIVIDER);
-        System.out.println(banner);
-        System.out.println("     Hello! I'm Chione.");
-        System.out.println("     What can I do for you?");
-        System.out.println(DIVIDER);
-        System.out.println();
-    }
-
-    /** Prints the goodbye message shown just before Chione exits. */
-    private static void printFarewell() {
-        printBlock("Bye. Hope to see you again soon!");
-    }
-
     /**
-     * Prints one or more lines of text wrapped between two dividers, which is the
-     * standard shape of every reply Chione gives.
+     * Starts Chione.
      *
-     * <p>The {@code String...} parameter accepts any number of lines, so a one-line
-     * reply and a multi-line list can share the same method.
-     *
-     * @param lines the lines to show to the user, in order
+     * @param args ignored; Chione takes no command-line arguments
      */
-    private static void printBlock(String... lines) {
-        System.out.println(DIVIDER);
-        for (String line : lines) {
-            System.out.println("     " + line);
-        }
-        System.out.println(DIVIDER);
-        System.out.println();
+    public static void main(String[] args) {
+        new Chione(SAVE_FILE_PATH).run();
     }
 }
