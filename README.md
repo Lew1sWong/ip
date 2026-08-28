@@ -63,6 +63,29 @@ to be installed beforehand. On Windows use `gradlew` in place of `./gradlew`.
 
 Prerequisites: JDK 25. Nothing else — the wrapper downloads Gradle on first use.
 
+## Running the released JAR
+
+`./gradlew shadowJar` produces `build/libs/chione.jar`, a single file carrying
+everything Chione needs. To run it:
+
+1. Put the JAR in a folder of its own.
+2. Open a command line in that folder.
+3. Run it:
+
+   ```
+   java -jar chione.jar
+   ```
+
+The quotes in `java -jar "chione.jar"` are only needed if the path contains a
+space or a character the shell treats specially.
+
+Chione keeps its tasks in `data/chione.txt` **relative to the folder you run it
+from**, so the JAR creates that folder beside itself the first time you add a
+task. Running it from two different folders gives you two separate task lists.
+
+The JAR is not kept in this repository — it is built from the source, and
+published on the [releases page](../../releases).
+
 ## Setting up in Intellij
 
 Prerequisites: JDK 25, update Intellij to the most recent version.
