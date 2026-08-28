@@ -9,6 +9,7 @@ import chione.command.AddCommand;
 import chione.command.CommandType;
 import chione.command.DeleteCommand;
 import chione.command.ExitCommand;
+import chione.command.FindCommand;
 import chione.command.ListCommand;
 import chione.command.MarkCommand;
 import chione.command.OnCommand;
@@ -70,7 +71,7 @@ public class ParserTest {
     public void parse_unknownWord_exceptionListsEveryKeyword() {
         ChioneException e = assertThrows(ChioneException.class, () -> Parser.parse("blah"));
         assertEquals("I don't know what \"blah\" means. "
-                + "I understand: todo, deadline, event, list, on, mark, unmark, delete, bye.",
+                + "I understand: todo, deadline, event, list, on, find, mark, unmark, delete, bye.",
                 e.getMessage());
     }
 
@@ -79,6 +80,29 @@ public class ParserTest {
         // "listing" starts with "list", but it is a different word, so it is not
         // the list command with a stray argument.
         assertThrows(ChioneException.class, () -> Parser.parse("listing"));
+    }
+
+    @Test
+    public void parse_findLine_findCommandProduced() throws ChioneException {
+        assertInstanceOf(FindCommand.class, Parser.parse("find book"));
+    }
+
+    @Test
+    public void parseKeyword_word_returnedUnchanged() throws ChioneException {
+        assertEquals("book", Parser.parseKeyword("book"));
+    }
+
+    @Test
+    public void parseKeyword_severalWords_allKept() throws ChioneException {
+        // The whole of what was typed is the search text, spaces included.
+        assertEquals("read book", Parser.parseKeyword("read book"));
+    }
+
+    @Test
+    public void parseKeyword_nothingTyped_exceptionThrown() {
+        // An empty search would match everything, which is what "list" is for.
+        ChioneException e = assertThrows(ChioneException.class, () -> Parser.parseKeyword(""));
+        assertEquals("Tell me what to look for. Try: find book", e.getMessage());
     }
 
     @Test

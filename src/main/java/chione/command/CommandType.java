@@ -12,7 +12,7 @@ package chione.command;
  * enum's. What is left here is the vocabulary itself.
  *
  * <p>An enum is used rather than string constants because a {@code CommandType} can
- * only ever hold one of these nine values. A typo like {@code CommandType.LITS}
+ * only ever hold one of these ten values. A typo like {@code CommandType.LITS}
  * fails to compile, whereas the string {@code "lits"} would compile happily and
  * simply never match anything at runtime.
  */
@@ -31,6 +31,9 @@ public enum CommandType {
 
     /** Shows the tasks falling on one particular day. */
     ON("on"),
+
+    /** Shows the tasks whose description contains a given word. */
+    FIND("find"),
 
     /** Marks a task as done. */
     MARK("mark"),

@@ -1,6 +1,7 @@
 package chione.task;
 
 import java.time.LocalDate;
+import java.util.Locale;
 
 /**
  * A single item in the user's task list.
@@ -75,6 +76,21 @@ public class Task {
      */
     public boolean occursOn(LocalDate date) {
         return false;
+    }
+
+    /**
+     * Reports whether this task's description contains the given word.
+     *
+     * <p>The comparison ignores case, so searching for "Book" finds "read book".
+     * The locale is fixed rather than left to the machine, so the same search
+     * gives the same answer everywhere.
+     *
+     * @param keyword the word being searched for
+     * @return {@code true} if the description contains it
+     */
+    public boolean hasKeyword(String keyword) {
+        String lowerCaseDescription = description.toLowerCase(Locale.ENGLISH);
+        return lowerCaseDescription.contains(keyword.toLowerCase(Locale.ENGLISH));
     }
 
     /**

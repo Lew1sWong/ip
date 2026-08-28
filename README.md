@@ -20,6 +20,7 @@ It is built as the individual project (iP) for CS2103/T.
 | `event DESCRIPTION /from START /to END`          | Adds a task spanning two times    |
 | `list`                                           | Shows every task                  |
 | `on DATE`                                        | Shows the tasks falling on a day  |
+| `find KEYWORD`                                   | Shows the tasks matching a word   |
 | `mark INDEX` / `unmark INDEX`                    | Marks a task as done / not done   |
 | `delete INDEX`                                   | Removes a task                    |
 | `bye`                                            | Ends the conversation             |
@@ -31,6 +32,13 @@ Chione shows it back in a friendlier form, e.g. `Oct 15 2019, 6:00pm`.
 
 `on 2019-10-15` lists everything happening that day: deadlines falling on it, and
 events running over it, including ones that started on an earlier day.
+
+### Searching
+
+`find book` shows every task whose description contains that text. The search
+ignores case, and matches anywhere in the description rather than whole words
+only, so `find oo` finds `read book` too. Only the description is searched — a
+deadline is not found by the date it falls on. Use `on` for that.
 
 ### Saving
 

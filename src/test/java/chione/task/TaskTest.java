@@ -94,6 +94,35 @@ public class TaskTest {
     }
 
     @Test
+    public void hasKeyword_wholeWordInDescription_true() {
+        assertTrue(new Todo("read book").hasKeyword("book"));
+    }
+
+    @Test
+    public void hasKeyword_differentCase_true() {
+        // Searching should not depend on how the user happened to capitalise it.
+        assertTrue(new Todo("read book").hasKeyword("BOOK"));
+        assertTrue(new Todo("Read Book").hasKeyword("book"));
+    }
+
+    @Test
+    public void hasKeyword_partOfAWord_true() {
+        // The search is over the text, not over whole words.
+        assertTrue(new Todo("read book").hasKeyword("oo"));
+    }
+
+    @Test
+    public void hasKeyword_wordNotInDescription_false() {
+        assertFalse(new Todo("read book").hasKeyword("essay"));
+    }
+
+    @Test
+    public void hasKeyword_wordOnlyInTheDate_false() {
+        // Only the description is searched, so the rendered date is not matched.
+        assertFalse(new Deadline("return book", SIX_PM).hasKeyword("Oct"));
+    }
+
+    @Test
     public void occursOn_todo_alwaysFalse() {
         assertFalse(new Todo("read book").occursOn(LocalDate.of(2019, 10, 15)));
     }

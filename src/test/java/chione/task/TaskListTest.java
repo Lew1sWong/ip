@@ -139,6 +139,37 @@ public class TaskListTest {
     }
 
     @Test
+    public void find_wordInTwoDescriptions_bothFound() {
+        // "read book" and "return book" both contain it; the meeting does not.
+        assertEquals(2, sampleList().find("book").size());
+    }
+
+    @Test
+    public void find_wordInOneDescription_onlyThatOneFound() throws ChioneException {
+        TaskList found = sampleList().find("meeting");
+        assertEquals(1, found.size());
+        assertEquals("[E][ ] meeting (from: Oct 15 2019, 2:00pm to: Oct 17 2019, 4:00pm)",
+                found.get(0).toString());
+    }
+
+    @Test
+    public void find_differentCase_stillFound() {
+        assertEquals(2, sampleList().find("BOOK").size());
+    }
+
+    @Test
+    public void find_wordInNoDescription_nothingFound() {
+        assertTrue(sampleList().find("holiday").isEmpty());
+    }
+
+    @Test
+    public void find_matches_originalListUnchanged() {
+        TaskList tasks = sampleList();
+        tasks.find("book");
+        assertEquals(3, tasks.size());
+    }
+
+    @Test
     public void asList_addingThroughTheView_exceptionThrown() {
         // The view is handed out for reading only; changing the list has to go
         // through the methods above.

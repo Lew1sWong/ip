@@ -179,6 +179,21 @@ public class Ui {
     }
 
     /**
+     * Shows the tasks whose description contains a given word.
+     *
+     * @param matches the tasks found, possibly none
+     * @param keyword the word that was searched for, quoted back when nothing
+     *                matched so the user can see what was actually looked for
+     */
+    public void showMatchingTasks(TaskList matches, String keyword) {
+        if (matches.isEmpty()) {
+            showBlock("Nothing in your list matches \"" + keyword + "\".");
+            return;
+        }
+        showBlock(numbered("Here are the matching tasks in your list:", matches));
+    }
+
+    /**
      * Builds a heading followed by the tasks, numbered from 1.
      *
      * <p>The lines are built before anything is printed, so that the whole list

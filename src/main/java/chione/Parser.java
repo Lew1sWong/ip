@@ -5,6 +5,7 @@ import chione.command.Command;
 import chione.command.CommandType;
 import chione.command.DeleteCommand;
 import chione.command.ExitCommand;
+import chione.command.FindCommand;
 import chione.command.ListCommand;
 import chione.command.MarkCommand;
 import chione.command.OnCommand;
@@ -59,6 +60,7 @@ public final class Parser {
         case EVENT -> new AddCommand(parseEvent(arguments));
         case LIST -> new ListCommand();
         case ON -> new OnCommand(parseDate(arguments));
+        case FIND -> new FindCommand(parseKeyword(arguments));
         case MARK -> new MarkCommand(parseTaskNumber(arguments, type));
         case UNMARK -> new UnmarkCommand(parseTaskNumber(arguments, type));
         case DELETE -> new DeleteCommand(parseTaskNumber(arguments, type));
@@ -226,6 +228,23 @@ public final class Parser {
             throw new ChioneException("Tell me which day to look at. Try: on 2019-10-15");
         }
         return DateTimes.parseDate(arguments);
+    }
+
+    /**
+     * Extracts the word to search for from a {@code find} command.
+     *
+     * <p>An empty search would match every task, which is what {@code list}
+     * already does, so it is refused rather than answered.
+     *
+     * @param arguments everything typed after {@code find}, e.g. {@code "book"}
+     * @return the word to search for
+     * @throws ChioneException if nothing was given to search for
+     */
+    public static String parseKeyword(String arguments) throws ChioneException {
+        if (arguments.isEmpty()) {
+            throw new ChioneException("Tell me what to look for. Try: find book");
+        }
+        return arguments;
     }
 
     /**
