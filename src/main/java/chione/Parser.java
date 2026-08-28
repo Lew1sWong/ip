@@ -113,10 +113,12 @@ public final class Parser {
      * @throws ChioneException if the description or the due date is missing or unreadable
      */
     public static Deadline parseDeadline(String arguments) throws ChioneException {
-        // The limit of 2 stops the split at the first " /by ", so a description
-        // that itself contains " /by " is kept intact. The space glued on the
-        // front lets "deadline /by Sunday" split as well, so its empty
-        // description is reported as such rather than as a missing due date.
+        // The limit of 2 stops the split at the first " /by ", so everything after
+        // that -- further separators included -- is taken as the date. A
+        // description containing " /by " is therefore not supported: it would be
+        // cut short at the first one. The space glued on the front lets
+        // "deadline /by Sunday" split as well, so its empty description is
+        // reported as such rather than as a missing due date.
         String[] parts = (" " + arguments).split(" /by ", 2);
         if (parts.length < 2) {
             throw new ChioneException("A deadline needs a due date after /by. "
