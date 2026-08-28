@@ -1,3 +1,5 @@
+package chione;
+
 /**
  * Ends the conversation.
  */

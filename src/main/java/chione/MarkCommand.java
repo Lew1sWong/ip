@@ -1,26 +1,28 @@
+package chione;
+
 /**
- * Marks a task as not done, undoing a {@link MarkCommand}.
+ * Marks a task as done.
  */
-public class UnmarkCommand extends Command {
-    /** Zero-based position of the task to unmark. */
+public class MarkCommand extends Command {
+    /** Zero-based position of the task to mark. */
     private final int index;
 
     /**
-     * Remembers which task to unmark.
+     * Remembers which task to mark.
      *
      * @param index zero-based position of the task; whether the list actually
      *              holds that position is decided by {@link TaskList} when this
      *              command is carried out
      */
-    public UnmarkCommand(int index) {
+    public MarkCommand(int index) {
         this.index = index;
     }
 
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) throws ChioneException {
         Task task = tasks.get(index);
-        task.markAsNotDone();
-        ui.showUnmarked(task);
+        task.markAsDone();
+        ui.showMarked(task);
         storage.save(tasks);
     }
 }

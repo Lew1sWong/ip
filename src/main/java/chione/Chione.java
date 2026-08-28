@@ -1,3 +1,5 @@
+package chione;
+
 /**
  * The Chione chatbot.
  *

@@ -1,3 +1,5 @@
+package chione;
+
 /**
  * Signals that Chione cannot carry out what the user asked for.
  *

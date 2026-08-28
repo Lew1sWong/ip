@@ -1,3 +1,5 @@
+package chione;
+
 /**
  * The words Chione understands at the start of a line.
  *

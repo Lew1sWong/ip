@@ -1,3 +1,5 @@
+package chione;
+
 import java.util.Scanner;
 
 /**
