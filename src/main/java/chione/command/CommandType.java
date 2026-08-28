@@ -1,12 +1,14 @@
+package chione.command;
+
 /**
  * The words Chione understands at the start of a line.
  *
  * <p>Each constant owns the keyword the user types to invoke it, so the list of
  * valid commands exists in exactly one place: adding a command here is enough
- * for {@link Parser} to recognise it and quote it in error messages, and for the
+ * for {@link chione.Parser Parser} to recognise it and quote it in error messages, and for the
  * compiler to demand a branch for it in the switch that carries commands out.
  *
- * <p>Recognising which keyword was typed is {@link Parser}'s job, not this
+ * <p>Recognising which keyword was typed is {@link chione.Parser Parser}'s job, not this
  * enum's. What is left here is the vocabulary itself.
  *
  * <p>An enum is used rather than string constants because a {@code CommandType} can

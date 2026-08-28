@@ -1,3 +1,8 @@
+package chione;
+
+import chione.command.Command;
+import chione.task.TaskList;
+
 /**
  * The Chione chatbot.
  *

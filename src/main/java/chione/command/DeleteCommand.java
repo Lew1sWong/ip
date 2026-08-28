@@ -1,3 +1,11 @@
+package chione.command;
+
+import chione.ChioneException;
+import chione.Storage;
+import chione.Ui;
+import chione.task.Task;
+import chione.task.TaskList;
+
 /**
  * Removes a task from the list.
  */
