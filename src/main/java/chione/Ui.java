@@ -161,7 +161,7 @@ public class Ui {
             showBlock("Your list is empty for now.");
             return;
         }
-        showBlock(numbered("Here are the tasks in your list:", tasks));
+        showBlock(buildNumberedLines("Here are the tasks in your list:", tasks));
     }
 
     /**
@@ -175,11 +175,11 @@ public class Ui {
             showBlock("Nothing on " + readableDate + ".");
             return;
         }
-        showBlock(numbered("Here is what you have on " + readableDate + ":", matches));
+        showBlock(buildNumberedLines("Here is what you have on " + readableDate + ":", matches));
     }
 
     /**
-     * Builds a heading followed by the tasks, numbered from 1.
+     * Builds the lines of a listing: a heading, then the tasks numbered from 1.
      *
      * <p>The lines are built before anything is printed, so that the whole list
      * appears inside a single pair of dividers.
@@ -188,7 +188,7 @@ public class Ui {
      * @param tasks   the tasks to number, known not to be empty
      * @return the heading and one line per task
      */
-    private static String[] numbered(String heading, TaskList tasks) {
+    private static String[] buildNumberedLines(String heading, TaskList tasks) {
         String[] lines = new String[tasks.size() + 1];
         lines[0] = heading;
 

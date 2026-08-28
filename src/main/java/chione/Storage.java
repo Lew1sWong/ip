@@ -18,7 +18,7 @@ import java.util.List;
  *
  * <p>Every task is written as one line of a plain text file, e.g.
  * {@code "D | 0 | return book | June 6th"}. A text format was chosen over Java
- * object serialisation because the saved file stays readable and editable by a
+ * object serialization because the saved file stays readable and editable by a
  * human, which makes it far easier to inspect when something goes wrong.
  *
  * <p>Reading and writing live here rather than in {@link Chione} so that the
@@ -144,12 +144,12 @@ public class Storage {
     private static Task parseTask(String line) throws ChioneException {
         String[] parts = line.split(SEPARATOR_PATTERN);
         if (parts.length < 3) {
-            throw corruptedFile(line);
+            throw buildCorruptedFileException(line);
         }
 
         String doneFlag = parts[1];
         if (!doneFlag.equals("0") && !doneFlag.equals("1")) {
-            throw corruptedFile(line);
+            throw buildCorruptedFileException(line);
         }
         String description = parts[2];
 
@@ -158,25 +158,25 @@ public class Storage {
         Task task = switch (parts[0]) {
         case "T" -> {
             if (parts.length != 3) {
-                throw corruptedFile(line);
+                throw buildCorruptedFileException(line);
             }
             yield new Todo(description);
         }
         case "D" -> {
             if (parts.length != 4) {
-                throw corruptedFile(line);
+                throw buildCorruptedFileException(line);
             }
             yield new Deadline(description, parseSavedMoment(parts[3], line));
         }
         case "E" -> {
             if (parts.length != 5) {
-                throw corruptedFile(line);
+                throw buildCorruptedFileException(line);
             }
             yield new Event(description,
                     parseSavedMoment(parts[3], line),
                     parseSavedMoment(parts[4], line));
         }
-        default -> throw corruptedFile(line);
+        default -> throw buildCorruptedFileException(line);
         };
 
         if (doneFlag.equals("1")) {
@@ -202,19 +202,19 @@ public class Storage {
         try {
             return DateTimes.parse(text);
         } catch (ChioneException e) {
-            throw corruptedFile(line);
+            throw buildCorruptedFileException(line);
         }
     }
 
     /**
-     * Builds the exception used for every unreadable line, so the wording and the
-     * advice that goes with it are written once.
+     * Builds the exception reported for every unreadable line, so that its wording
+     * and the advice that goes with it are written once.
      *
      * @param line the line that could not be understood, quoted back to the user
      *             so they can find and fix it by hand
      * @return the exception to throw
      */
-    private static ChioneException corruptedFile(String line) {
+    private static ChioneException buildCorruptedFileException(String line) {
         return new ChioneException("My save file has a line I don't understand: \""
                 + line + "\". Fix or delete that line and start me again.");
     }
