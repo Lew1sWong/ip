@@ -36,6 +36,13 @@ test {
     }
 }
 
+javadoc {
+    // Turn on every doclint check. A missing @param or a {@link} pointing at
+    // nothing is a documentation bug, and the cheapest time to fix one is while
+    // the code it describes is still fresh.
+    options.addStringOption('Xdoclint:all', '-quiet')
+}
+
 application {
     mainClass = 'chione.Chione'
 }
