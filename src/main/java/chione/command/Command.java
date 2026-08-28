@@ -8,7 +8,7 @@ import chione.task.TaskList;
 /**
  * Something the user has asked Chione to do.
  *
- * <p>A {@link CommandType} is a word Chione recognises; a {@code Command} is a
+ * <p>A {@link CommandType} is a word Chione recognizes; a {@code Command} is a
  * particular request, already understood and holding whatever it needs to be
  * carried out — the task to add, or the position to delete. Turning a line of
  * input into one of these is {@link chione.Parser Parser}'s job; carrying it out is this

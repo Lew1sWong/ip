@@ -111,32 +111,32 @@ public class TaskTest {
 
     @Test
     public void occursOn_eventFirstDay_true() {
-        assertTrue(threeDayEvent().occursOn(LocalDate.of(2019, 10, 15)));
+        assertTrue(buildThreeDayEvent().occursOn(LocalDate.of(2019, 10, 15)));
     }
 
     @Test
     public void occursOn_eventMiddleDay_true() {
-        assertTrue(threeDayEvent().occursOn(LocalDate.of(2019, 10, 16)));
+        assertTrue(buildThreeDayEvent().occursOn(LocalDate.of(2019, 10, 16)));
     }
 
     @Test
     public void occursOn_eventLastDay_true() {
         // Both ends of the range count, so the day it finishes is a day it runs.
-        assertTrue(threeDayEvent().occursOn(LocalDate.of(2019, 10, 17)));
+        assertTrue(buildThreeDayEvent().occursOn(LocalDate.of(2019, 10, 17)));
     }
 
     @Test
     public void occursOn_eventDayAfter_false() {
-        assertFalse(threeDayEvent().occursOn(LocalDate.of(2019, 10, 18)));
+        assertFalse(buildThreeDayEvent().occursOn(LocalDate.of(2019, 10, 18)));
     }
 
     @Test
     public void occursOn_eventDayBefore_false() {
-        assertFalse(threeDayEvent().occursOn(LocalDate.of(2019, 10, 14)));
+        assertFalse(buildThreeDayEvent().occursOn(LocalDate.of(2019, 10, 14)));
     }
 
     /** An event running from the 15th to the 17th of October 2019. */
-    private Event threeDayEvent() {
+    private Event buildThreeDayEvent() {
         return new Event("meeting",
                 LocalDateTime.of(2019, 10, 15, 14, 0),
                 LocalDateTime.of(2019, 10, 17, 16, 0));

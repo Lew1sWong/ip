@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  */
 public class TaskListTest {
     /** Builds a list holding a todo, a deadline and a three-day event. */
-    private TaskList sampleList() {
+    private TaskList buildSampleList() {
         TaskList tasks = new TaskList();
         tasks.add(new Todo("read book"));
         tasks.add(new Deadline("return book", LocalDateTime.of(2019, 10, 15, 18, 0)));
@@ -45,25 +45,25 @@ public class TaskListTest {
 
     @Test
     public void add_severalTasks_sizeMatches() {
-        assertEquals(3, sampleList().size());
+        assertEquals(3, buildSampleList().size());
     }
 
     @Test
     public void get_firstTask_returnedInInsertionOrder() throws ChioneException {
-        assertEquals("[T][ ] read book", sampleList().get(0).toString());
+        assertEquals("[T][ ] read book", buildSampleList().get(0).toString());
     }
 
     @Test
     public void get_onePastTheEnd_exceptionCountsFromOne() {
         // The message has to speak in the numbers the user saw, not in indices.
-        ChioneException e = assertThrows(ChioneException.class, () -> sampleList().get(3));
+        ChioneException e = assertThrows(ChioneException.class, () -> buildSampleList().get(3));
         assertEquals("There is no task 4. Your list has 3 task(s) right now.", e.getMessage());
     }
 
     @Test
     public void get_negativeIndex_exceptionThrown() {
         // "mark 0" arrives here as index -1.
-        ChioneException e = assertThrows(ChioneException.class, () -> sampleList().get(-1));
+        ChioneException e = assertThrows(ChioneException.class, () -> buildSampleList().get(-1));
         assertEquals("There is no task 0. Your list has 3 task(s) right now.", e.getMessage());
     }
 
@@ -75,7 +75,7 @@ public class TaskListTest {
 
     @Test
     public void remove_middleTask_returnedAndTakenOut() throws ChioneException {
-        TaskList tasks = sampleList();
+        TaskList tasks = buildSampleList();
         Task removed = tasks.remove(1);
 
         assertEquals("[D][ ] return book (by: Oct 15 2019, 6:00pm)", removed.toString());
@@ -87,14 +87,14 @@ public class TaskListTest {
 
     @Test
     public void remove_onePastTheEnd_listLeftAlone() {
-        TaskList tasks = sampleList();
+        TaskList tasks = buildSampleList();
         assertThrows(ChioneException.class, () -> tasks.remove(3));
         assertEquals(3, tasks.size());
     }
 
     @Test
     public void findOn_dayOfTheDeadline_deadlineAndEventFound() {
-        TaskList found = sampleList().findOn(LocalDate.of(2019, 10, 15));
+        TaskList found = buildSampleList().findOn(LocalDate.of(2019, 10, 15));
         assertEquals(2, found.size());
     }
 
@@ -102,7 +102,7 @@ public class TaskListTest {
     public void findOn_dayInsideTheEvent_onlyTheEventFound() throws ChioneException {
         // The event runs 15th to 17th, so the 16th is a day it covers even though
         // it neither starts nor ends then.
-        TaskList found = sampleList().findOn(LocalDate.of(2019, 10, 16));
+        TaskList found = buildSampleList().findOn(LocalDate.of(2019, 10, 16));
         assertEquals(1, found.size());
         assertEquals("[E][ ] meeting (from: Oct 15 2019, 2:00pm to: Oct 17 2019, 4:00pm)",
                 found.get(0).toString());
@@ -110,17 +110,17 @@ public class TaskListTest {
 
     @Test
     public void findOn_lastDayOfTheEvent_stillFound() {
-        assertEquals(1, sampleList().findOn(LocalDate.of(2019, 10, 17)).size());
+        assertEquals(1, buildSampleList().findOn(LocalDate.of(2019, 10, 17)).size());
     }
 
     @Test
     public void findOn_dayAfterTheEvent_nothingFound() {
-        assertTrue(sampleList().findOn(LocalDate.of(2019, 10, 18)).isEmpty());
+        assertTrue(buildSampleList().findOn(LocalDate.of(2019, 10, 18)).isEmpty());
     }
 
     @Test
     public void findOn_dayBeforeEverything_nothingFound() {
-        assertTrue(sampleList().findOn(LocalDate.of(2019, 10, 14)).isEmpty());
+        assertTrue(buildSampleList().findOn(LocalDate.of(2019, 10, 14)).isEmpty());
     }
 
     @Test
@@ -133,7 +133,7 @@ public class TaskListTest {
 
     @Test
     public void findOn_matches_originalListUnchanged() {
-        TaskList tasks = sampleList();
+        TaskList tasks = buildSampleList();
         tasks.findOn(LocalDate.of(2019, 10, 15));
         assertEquals(3, tasks.size());
     }
@@ -143,12 +143,12 @@ public class TaskListTest {
         // The view is handed out for reading only; changing the list has to go
         // through the methods above.
         assertThrows(UnsupportedOperationException.class,
-                () -> sampleList().asList().add(new Todo("sneaked in")));
+                () -> buildSampleList().asList().add(new Todo("sneaked in")));
     }
 
     @Test
     public void asList_tasks_sameOrderAsTheList() {
-        assertEquals(3, sampleList().asList().size());
-        assertEquals("[T][ ] read book", sampleList().asList().get(0).toString());
+        assertEquals(3, buildSampleList().asList().size());
+        assertEquals("[T][ ] read book", buildSampleList().asList().get(0).toString());
     }
 }
