@@ -1,4 +1,4 @@
-package chione;
+package chione.task;
 
 /**
  * A task with no date or time attached, e.g. {@code "visit new theme park"}.

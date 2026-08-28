@@ -1,5 +1,17 @@
 package chione;
 
+import chione.command.AddCommand;
+import chione.command.Command;
+import chione.command.CommandType;
+import chione.command.DeleteCommand;
+import chione.command.ExitCommand;
+import chione.command.ListCommand;
+import chione.command.MarkCommand;
+import chione.command.OnCommand;
+import chione.command.UnmarkCommand;
+import chione.task.Deadline;
+import chione.task.Event;
+import chione.task.Todo;
 import java.time.LocalDate;
 
 /**
@@ -167,7 +179,7 @@ public final class Parser {
      * number typed is decremented by one.
      *
      * <p>Whether the number actually points at a task is not decided here:
-     * {@link TaskList} knows how long it is and refuses a position it does not
+     * {@link chione.task.TaskList TaskList} knows how long it is and refuses a position it does not
      * hold. This method only insists that a number was given at all.
      *
      * @param arguments everything typed after the keyword, e.g. {@code "2"}

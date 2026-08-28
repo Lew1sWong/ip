@@ -1,4 +1,4 @@
-package chione;
+package chione.task;
 
 import java.time.LocalDate;
 
@@ -7,7 +7,7 @@ import java.time.LocalDate;
  *
  * <p>A task knows its own description and whether it has been completed, and
  * knows how to render itself for display. Keeping that knowledge here rather
- * than in {@link Chione} means the chatbot only has to decide <em>when</em> to
+ * than in {@link chione.Chione Chione} means the chatbot only has to decide <em>when</em> to
  * show a task, not <em>how</em> to format one.
  */
 public class Task {

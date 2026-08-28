@@ -1,4 +1,10 @@
-package chione;
+package chione.command;
+
+import chione.ChioneException;
+import chione.Storage;
+import chione.Ui;
+import chione.task.Task;
+import chione.task.TaskList;
 
 /**
  * Marks a task as done.

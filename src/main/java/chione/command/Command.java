@@ -1,4 +1,9 @@
-package chione;
+package chione.command;
+
+import chione.ChioneException;
+import chione.Storage;
+import chione.Ui;
+import chione.task.TaskList;
 
 /**
  * Something the user has asked Chione to do.
@@ -6,12 +11,12 @@ package chione;
  * <p>A {@link CommandType} is a word Chione recognises; a {@code Command} is a
  * particular request, already understood and holding whatever it needs to be
  * carried out — the task to add, or the position to delete. Turning a line of
- * input into one of these is {@link Parser}'s job; carrying it out is this
+ * input into one of these is {@link chione.Parser Parser}'s job; carrying it out is this
  * class's.
  *
- * <p>Because each command knows how to carry itself out, {@link Chione} no
+ * <p>Because each command knows how to carry itself out, {@link chione.Chione Chione} no
  * longer needs a branch per command. Adding a command means adding a subclass
- * here and a case in {@link Parser}, and nothing in the main loop changes.
+ * here and a case in {@link chione.Parser Parser}, and nothing in the main loop changes.
  */
 public abstract class Command {
     /**
