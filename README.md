@@ -49,6 +49,20 @@ todo borrow book
     ____________________________________________________________
 ```
 
+## Building and running with Gradle
+
+The wrapper script fetches the right version of Gradle itself, so nothing needs
+to be installed beforehand. On Windows use `gradlew` in place of `./gradlew`.
+
+| Command           | What it does                                      |
+|-------------------|---------------------------------------------------|
+| `./gradlew run`   | Builds Chione and starts it                       |
+| `./gradlew build` | Compiles everything and runs the checks and tests |
+| `./gradlew test`  | Runs the tests only                               |
+| `./gradlew clean` | Deletes everything that was built                 |
+
+Prerequisites: JDK 25. Nothing else — the wrapper downloads Gradle on first use.
+
 ## Setting up in Intellij
 
 Prerequisites: JDK 25, update Intellij to the most recent version.
