@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * The tasks Chione is keeping track of.
@@ -118,9 +119,38 @@ public class TaskList {
      * @return the matching tasks, in their original order
      */
     public TaskList findOn(LocalDate date) {
+        return filter(task -> task.occursOn(date));
+    }
+
+    /**
+     * Returns the tasks whose description contains the given word.
+     *
+     * <p>As with {@link #findOn}, each task answers for itself, so the search
+     * works for any task type.
+     *
+     * @param keyword the word being searched for
+     * @return the matching tasks, in their original order
+     */
+    public TaskList find(String keyword) {
+        return filter(task -> task.hasKeyword(keyword));
+    }
+
+    /**
+     * Returns the tasks that answer yes to a question.
+     *
+     * <p>Searching by date and searching by word differ only in what is asked of
+     * each task, so the walk through the list is written once here and the
+     * question is handed in. {@link Predicate} is Java's name for "a test that
+     * takes one thing and answers true or false"; the callers above supply one
+     * as a lambda, which is shorthand for a whole class that only holds a test.
+     *
+     * @param test what to ask of each task
+     * @return the tasks that answered yes, in their original order
+     */
+    private TaskList filter(Predicate<Task> test) {
         ArrayList<Task> matches = new ArrayList<>();
         for (Task task : tasks) {
-            if (task.occursOn(date)) {
+            if (test.test(task)) {
                 matches.add(task);
             }
         }
