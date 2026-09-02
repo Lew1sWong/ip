@@ -17,6 +17,12 @@ import chione.task.TaskList;
  * <p>The methods are named for <em>what has happened</em> rather than for what to
  * print, so a caller says {@code showAdded(task, count)} and leaves the choice of
  * words to this class.
+ *
+ * <p>Nothing is written out as it is said. Each {@code show...} call adds to the
+ * reply being built, which is then collected in one piece — by
+ * {@link #printResponse()} for the console, or by {@link #consumeResponse()} for
+ * the window. That is what lets one set of replies serve both interfaces: the
+ * words are chosen here, and only the delivery differs.
  */
 public class Ui {
     /** Horizontal divider printed above and below each block of output. */
@@ -29,13 +35,24 @@ public class Ui {
      * Reads the user's input from standard input, one line at a time.
      *
      * <p>Held as a field so the same reader lasts for the whole conversation;
-     * creating a new one per line would risk losing buffered input.
+     * creating a new one per line would risk losing buffered input. Only the text
+     * interface reads from it; the window supplies its own input.
      */
     private final Scanner scanner;
 
-    /** Connects this Ui to the console. */
+    /**
+     * The reply being built, emptied each time one is collected.
+     *
+     * <p>A single command can say several things — a confirmation and then a
+     * count, say — and they belong together in one reply, so they are gathered
+     * here rather than sent out one at a time.
+     */
+    private final StringBuilder response;
+
+    /** Connects this Ui to the console and starts with nothing to say. */
     public Ui() {
         this.scanner = new Scanner(System.in);
+        this.response = new StringBuilder();
     }
 
     /**
@@ -65,7 +82,12 @@ public class Ui {
         scanner.close();
     }
 
-    /** Shows the banner and welcome message printed when Chione starts. */
+    /**
+     * Shows the banner and welcome message the text interface starts with.
+     *
+     * <p>The banner is drawn out of characters, so it only lines up in the
+     * console's fixed-width type. The window uses {@link #showGreeting()} instead.
+     */
     public void showWelcome() {
         // ASCII-art banner spelling "CHIONE". Each "\\" is an escaped
         // backslash, since a lone "\" starts an escape sequence in Java.
@@ -73,14 +95,15 @@ public class Ui {
                 + " / ___|| | | ||_ _| / _ \\ | \\ | || ____|\n"
                 + "| |    | |_| | | | | | | ||  \\| ||  _|  \n"
                 + "| |___ |  _  | | | | |_| || |\\  || |___ \n"
-                + " \\____||_| |_||___| \\___/ |_| \\_||_____|\n";
+                + " \\____||_| |_||___| \\___/ |_| \\_||_____|";
 
-        System.out.println(DIVIDER);
-        System.out.println(banner);
-        System.out.println(INDENT + "Hello! I'm Chione.");
-        System.out.println(INDENT + "What can I do for you?");
-        System.out.println(DIVIDER);
-        System.out.println();
+        showBlock(banner, "");
+        showGreeting();
+    }
+
+    /** Shows the welcome message on its own, without the ASCII-art banner. */
+    public void showGreeting() {
+        showBlock("Hello! I'm Chione.", "What can I do for you?");
     }
 
     /** Shows the goodbye message printed just before Chione exits. */
@@ -220,20 +243,55 @@ public class Ui {
     }
 
     /**
-     * Prints one or more lines wrapped between two dividers, which is the shape of
-     * every reply Chione gives.
+     * Hands over everything said since the last time it was collected, and starts
+     * a fresh reply.
      *
-     * <p>The {@code String...} parameter accepts any number of lines, so a
-     * one-line reply and a multi-line list share the same method.
+     * <p>This is what the window shows in a dialog box. The lines arrive plain,
+     * without the console's dividers and indent, because the window draws its own
+     * border around them.
      *
-     * @param lines the lines to show, in order
+     * @return the reply, or an empty string if there was nothing to say
      */
-    private void showBlock(String... lines) {
+    public String consumeResponse() {
+        // Only trailing space is removed: the banner's leading spaces are what
+        // keep its letters lined up.
+        String reply = response.toString().stripTrailing();
+        response.setLength(0);
+        return reply;
+    }
+
+    /**
+     * Prints everything said since the last time it was collected, wrapped between
+     * two dividers, which is the shape of every reply in the text interface.
+     *
+     * <p>A command that says nothing prints nothing, rather than an empty pair of
+     * dividers.
+     */
+    public void printResponse() {
+        String reply = consumeResponse();
+        if (reply.isEmpty()) {
+            return;
+        }
+
         System.out.println(DIVIDER);
-        for (String line : lines) {
+        for (String line : reply.split("\\R")) {
             System.out.println(INDENT + line);
         }
         System.out.println(DIVIDER);
         System.out.println();
+    }
+
+    /**
+     * Adds one or more lines to the reply being built.
+     *
+     * <p>The {@code String...} parameter accepts any number of lines, so a
+     * one-line reply and a multi-line list share the same method.
+     *
+     * @param lines the lines to add, in order
+     */
+    private void showBlock(String... lines) {
+        for (String line : lines) {
+            response.append(line).append(System.lineSeparator());
+        }
     }
 }

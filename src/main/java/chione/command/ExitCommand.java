@@ -14,9 +14,11 @@ public class ExitCommand extends Command {
 
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) {
-        // Nothing to do here. The goodbye is said by the run loop once it stops,
-        // so that it is also said when the input simply runs out without a "bye"
+        // Said here rather than by the run loop, because the window has no run
+        // loop: it only ever sees what a command says. The text interface still
+        // says goodbye of its own accord when the input runs out without a "bye"
         // -- when a script is piped in, for instance.
+        ui.showGoodbye();
     }
 
     /** {@inheritDoc} */
