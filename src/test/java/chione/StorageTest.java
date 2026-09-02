@@ -57,11 +57,11 @@ public class StorageTest {
         Storage storage = new Storage(tempDir.resolve("chione.txt").toString());
 
         TaskList original = new TaskList();
-        original.add(new Todo("read book"));
-        original.add(new Deadline("return book", LocalDateTime.of(2019, 10, 15, 18, 0)));
-        original.add(new Event("meeting",
-                LocalDateTime.of(2019, 10, 15, 14, 0),
-                LocalDateTime.of(2019, 10, 17, 16, 0)));
+        original.add(new Todo("read book"),
+                new Deadline("return book", LocalDateTime.of(2019, 10, 15, 18, 0)),
+                new Event("meeting",
+                        LocalDateTime.of(2019, 10, 15, 14, 0),
+                        LocalDateTime.of(2019, 10, 17, 16, 0)));
         storage.save(original);
 
         ArrayList<Task> reloaded = storage.load();
@@ -79,8 +79,7 @@ public class StorageTest {
         TaskList original = new TaskList();
         Todo done = new Todo("read book");
         done.markAsDone();
-        original.add(done);
-        original.add(new Todo("write essay"));
+        original.add(done, new Todo("write essay"));
         storage.save(original);
 
         ArrayList<Task> reloaded = storage.load();
@@ -103,13 +102,13 @@ public class StorageTest {
     @Test
     public void load_blankLines_skipped() throws ChioneException, IOException {
         // A text editor can easily leave one of these behind.
-        Path file = writeSaveFile("T | 0 | read book\n\n\nT | 1 | write essay\n");
+        Path file = writeSaveFile("T | 0 | read book", "", "", "T | 1 | write essay");
         assertEquals(2, new Storage(file.toString()).load().size());
     }
 
     @Test
     public void load_unknownTypeLetter_lineQuotedBack() throws IOException {
-        Path file = writeSaveFile("X | 0 | mystery\n");
+        Path file = writeSaveFile("X | 0 | mystery");
         ChioneException e = assertThrows(ChioneException.class, () ->
                 new Storage(file.toString()).load());
         assertEquals("My save file has a line I don't understand: \"X | 0 | mystery\". "
@@ -118,7 +117,7 @@ public class StorageTest {
 
     @Test
     public void load_doneFlagThatIsNotZeroOrOne_exceptionThrown() throws IOException {
-        Path file = writeSaveFile("T | 9 | read book\n");
+        Path file = writeSaveFile("T | 9 | read book");
         assertThrows(ChioneException.class, () -> new Storage(file.toString()).load());
     }
 
@@ -126,19 +125,19 @@ public class StorageTest {
     public void load_todoWithAnExtraField_exceptionThrown() throws IOException {
         // Strict field counts are what stop a description containing " | " from
         // being read back as something other than what was saved.
-        Path file = writeSaveFile("T | 0 | read | book\n");
+        Path file = writeSaveFile("T | 0 | read | book");
         assertThrows(ChioneException.class, () -> new Storage(file.toString()).load());
     }
 
     @Test
     public void load_deadlineMissingItsDate_exceptionThrown() throws IOException {
-        Path file = writeSaveFile("D | 0 | return book\n");
+        Path file = writeSaveFile("D | 0 | return book");
         assertThrows(ChioneException.class, () -> new Storage(file.toString()).load());
     }
 
     @Test
     public void load_eventMissingItsEnd_exceptionThrown() throws IOException {
-        Path file = writeSaveFile("E | 0 | meeting | 2019-10-15 1400\n");
+        Path file = writeSaveFile("E | 0 | meeting | 2019-10-15 1400");
         assertThrows(ChioneException.class, () -> new Storage(file.toString()).load());
     }
 
@@ -146,22 +145,26 @@ public class StorageTest {
     public void load_unreadableDate_reportedAsADamagedLine() throws IOException {
         // The advice for a mistyped date tells the user what to type, which makes
         // no sense about a file, so this has to be reported the other way.
-        Path file = writeSaveFile("D | 0 | return book | next Tuesday\n");
+        Path file = writeSaveFile("D | 0 | return book | next Tuesday");
         ChioneException e = assertThrows(ChioneException.class, () ->
                 new Storage(file.toString()).load());
         assertTrue(e.getMessage().startsWith("My save file has a line I don't understand"));
     }
 
     /**
-     * Writes a save file into this test's own folder.
+     * Writes a save file into this test's own folder, one line per argument.
      *
-     * @param contents exactly what the file should hold
+     * <p>Taking the lines separately rather than as one string keeps the escaped
+     * newlines out of the tests, so what each test is describing -- a damaged
+     * line, a blank one -- can be read at a glance.
+     *
+     * @param lines the lines of the file, without their line breaks
      * @return the path it was written to
      * @throws IOException if the temporary file cannot be written
      */
-    private Path writeSaveFile(String contents) throws IOException {
+    private Path writeSaveFile(String... lines) throws IOException {
         Path file = tempDir.resolve("chione.txt");
-        Files.writeString(file, contents);
+        Files.writeString(file, String.join("\n", lines) + "\n");
         return file;
     }
 }

@@ -23,11 +23,11 @@ public class TaskListTest {
     /** Builds a list holding a todo, a deadline and a three-day event. */
     private TaskList buildSampleList() {
         TaskList tasks = new TaskList();
-        tasks.add(new Todo("read book"));
-        tasks.add(new Deadline("return book", LocalDateTime.of(2019, 10, 15, 18, 0)));
-        tasks.add(new Event("meeting",
-                LocalDateTime.of(2019, 10, 15, 14, 0),
-                LocalDateTime.of(2019, 10, 17, 16, 0)));
+        tasks.add(new Todo("read book"),
+                new Deadline("return book", LocalDateTime.of(2019, 10, 15, 18, 0)),
+                new Event("meeting",
+                        LocalDateTime.of(2019, 10, 15, 14, 0),
+                        LocalDateTime.of(2019, 10, 17, 16, 0)));
         return tasks;
     }
 
@@ -41,6 +41,26 @@ public class TaskListTest {
         TaskList tasks = new TaskList();
         tasks.add(new Todo("read book"));
         assertFalse(tasks.isEmpty());
+    }
+
+    @Test
+    public void add_severalTasksInOneCall_keptInTheOrderGiven() throws ChioneException {
+        TaskList tasks = new TaskList();
+        tasks.add(new Todo("first"), new Todo("second"), new Todo("third"));
+
+        assertEquals(3, tasks.size());
+        assertEquals("[T][ ] first", tasks.get(0).toString());
+        assertEquals("[T][ ] second", tasks.get(1).toString());
+        assertEquals("[T][ ] third", tasks.get(2).toString());
+    }
+
+    @Test
+    public void add_noTasks_listUnchanged() {
+        // An empty call is what a caller passing on a list it was given may end
+        // up making, so it must be harmless rather than an error.
+        TaskList tasks = new TaskList();
+        tasks.add();
+        assertTrue(tasks.isEmpty());
     }
 
     @Test
