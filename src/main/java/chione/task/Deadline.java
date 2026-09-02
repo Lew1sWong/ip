@@ -1,8 +1,9 @@
 package chione.task;
 
-import chione.DateTimes;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import chione.DateTimes;
 
 /**
  * A task that must be finished before a given date or time,

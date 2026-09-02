@@ -4,12 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import chione.task.Deadline;
-import chione.task.Event;
-import chione.task.Task;
-import chione.task.TaskList;
-import chione.task.Todo;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +12,12 @@ import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import chione.task.Deadline;
+import chione.task.Event;
+import chione.task.Task;
+import chione.task.TaskList;
+import chione.task.Todo;
 
 /**
  * Tests {@link Storage} against real files.
@@ -110,8 +110,8 @@ public class StorageTest {
     @Test
     public void load_unknownTypeLetter_lineQuotedBack() throws IOException {
         Path file = writeSaveFile("X | 0 | mystery\n");
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> new Storage(file.toString()).load());
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                new Storage(file.toString()).load());
         assertEquals("My save file has a line I don't understand: \"X | 0 | mystery\". "
                 + "Fix or delete that line and start me again.", e.getMessage());
     }
@@ -147,8 +147,8 @@ public class StorageTest {
         // The advice for a mistyped date tells the user what to type, which makes
         // no sense about a file, so this has to be reported the other way.
         Path file = writeSaveFile("D | 0 | return book | next Tuesday\n");
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> new Storage(file.toString()).load());
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                new Storage(file.toString()).load());
         assertTrue(e.getMessage().startsWith("My save file has a line I don't understand"));
     }
 

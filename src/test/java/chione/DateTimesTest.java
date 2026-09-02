@@ -64,8 +64,8 @@ public class DateTimesTest {
 
     @Test
     public void parseDate_unreadableText_exceptionThrown() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> DateTimes.parseDate("15/10/2019"));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                DateTimes.parseDate("15/10/2019"));
         assertEquals("I can't read the date \"15/10/2019\". Write it as 2019-10-15.",
                 e.getMessage());
     }

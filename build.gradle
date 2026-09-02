@@ -1,12 +1,21 @@
 plugins {
     id 'java'
     id 'application'
+    id 'checkstyle'
     id 'com.gradleup.shadow' version '9.5.1'
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
+}
+
+checkstyle {
+    // The rules themselves live in config/checkstyle/checkstyle.xml, which is the
+    // sample configuration for the SE-EDU coding standard. Only the version of the
+    // tool that reads them is pinned here, so a Gradle upgrade cannot quietly
+    // change which violations are reported.
+    toolVersion = '11.0.0'
 }
 
 repositories {
