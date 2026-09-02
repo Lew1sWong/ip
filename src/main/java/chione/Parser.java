@@ -1,5 +1,7 @@
 package chione;
 
+import java.time.LocalDate;
+
 import chione.command.AddCommand;
 import chione.command.Command;
 import chione.command.CommandType;
@@ -13,7 +15,6 @@ import chione.command.UnmarkCommand;
 import chione.task.Deadline;
 import chione.task.Event;
 import chione.task.Todo;
-import java.time.LocalDate;
 
 /**
  * Turns what the user typed into something Chione can act on.
@@ -55,16 +56,16 @@ public final class Parser {
         String arguments = type.argumentsOf(input);
 
         return switch (type) {
-        case TODO -> new AddCommand(parseTodo(arguments));
-        case DEADLINE -> new AddCommand(parseDeadline(arguments));
-        case EVENT -> new AddCommand(parseEvent(arguments));
-        case LIST -> new ListCommand();
-        case ON -> new OnCommand(parseDate(arguments));
-        case FIND -> new FindCommand(parseKeyword(arguments));
-        case MARK -> new MarkCommand(parseTaskNumber(arguments, type));
-        case UNMARK -> new UnmarkCommand(parseTaskNumber(arguments, type));
-        case DELETE -> new DeleteCommand(parseTaskNumber(arguments, type));
-        case BYE -> new ExitCommand();
+            case TODO -> new AddCommand(parseTodo(arguments));
+            case DEADLINE -> new AddCommand(parseDeadline(arguments));
+            case EVENT -> new AddCommand(parseEvent(arguments));
+            case LIST -> new ListCommand();
+            case ON -> new OnCommand(parseDate(arguments));
+            case FIND -> new FindCommand(parseKeyword(arguments));
+            case MARK -> new MarkCommand(parseTaskNumber(arguments, type));
+            case UNMARK -> new UnmarkCommand(parseTaskNumber(arguments, type));
+            case DELETE -> new DeleteCommand(parseTaskNumber(arguments, type));
+            case BYE -> new ExitCommand();
         };
     }
 

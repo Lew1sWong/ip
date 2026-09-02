@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.Test;
+
 import chione.command.AddCommand;
 import chione.command.CommandType;
 import chione.command.DeleteCommand;
@@ -14,8 +16,6 @@ import chione.command.ListCommand;
 import chione.command.MarkCommand;
 import chione.command.OnCommand;
 import chione.command.UnmarkCommand;
-
-import org.junit.jupiter.api.Test;
 
 /**
  * Tests {@link Parser}, which is the only part of Chione that sees raw input.
@@ -130,24 +130,24 @@ public class ParserTest {
 
     @Test
     public void parseDeadline_noBySeparator_exceptionThrown() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseDeadline("return book"));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseDeadline("return book"));
         assertEquals("A deadline needs a due date after /by. "
                 + "Try: deadline return book /by Sunday", e.getMessage());
     }
 
     @Test
     public void parseDeadline_nothingBeforeBy_exceptionNamesTheDescription() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseDeadline("/by 2019-10-15"));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseDeadline("/by 2019-10-15"));
         assertEquals("A deadline needs a description before /by. "
                 + "Try: deadline return book /by Sunday", e.getMessage());
     }
 
     @Test
     public void parseDeadline_nothingAfterBy_exceptionNamesTheDate() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseDeadline("return book /by "));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseDeadline("return book /by "));
         assertEquals("Tell me when it is due after /by. "
                 + "Try: deadline return book /by Sunday", e.getMessage());
     }
@@ -162,8 +162,8 @@ public class ParserTest {
         // The split stops at the first " /by ", so everything after it is treated
         // as the date -- separators included. The date is then rejected for being
         // unreadable rather than silently cut in half.
-        assertThrows(ChioneException.class,
-                () -> Parser.parseDeadline("return book /by 2019-10-15 /by 2019-10-16"));
+        assertThrows(ChioneException.class, () ->
+                Parser.parseDeadline("return book /by 2019-10-15 /by 2019-10-16"));
     }
 
     @Test
@@ -174,24 +174,24 @@ public class ParserTest {
 
     @Test
     public void parseEvent_noFromSeparator_exceptionThrown() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseEvent("meeting /to 2019-10-17 1600"));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseEvent("meeting /to 2019-10-17 1600"));
         assertEquals("An event needs a start time after /from. "
                 + "Try: event project meeting /from Mon 2pm /to 4pm", e.getMessage());
     }
 
     @Test
     public void parseEvent_noToSeparator_exceptionThrown() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseEvent("meeting /from 2019-10-15 1400"));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseEvent("meeting /from 2019-10-15 1400"));
         assertEquals("An event needs an end time after /to. "
                 + "Try: event project meeting /from Mon 2pm /to 4pm", e.getMessage());
     }
 
     @Test
     public void parseEvent_emptyDescription_exceptionThrown() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseEvent("/from 2019-10-15 1400 /to 2019-10-17 1600"));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseEvent("/from 2019-10-15 1400 /to 2019-10-17 1600"));
         assertEquals("An event needs a description, a start and an end. "
                 + "Try: event project meeting /from Mon 2pm /to 4pm", e.getMessage());
     }
@@ -204,15 +204,15 @@ public class ParserTest {
 
     @Test
     public void parseTaskNumber_nothingTyped_exceptionNamesTheCommand() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseTaskNumber("", CommandType.DELETE));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseTaskNumber("", CommandType.DELETE));
         assertEquals("Tell me which task to delete. Try: delete 2", e.getMessage());
     }
 
     @Test
     public void parseTaskNumber_notANumber_exceptionQuotesWhatWasTyped() {
-        ChioneException e = assertThrows(ChioneException.class,
-                () -> Parser.parseTaskNumber("abc", CommandType.MARK));
+        ChioneException e = assertThrows(ChioneException.class, () ->
+                Parser.parseTaskNumber("abc", CommandType.MARK));
         assertEquals("\"abc\" is not a task number. Try: mark 2", e.getMessage());
     }
 

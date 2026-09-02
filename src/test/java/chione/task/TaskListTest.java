@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import chione.ChioneException;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
+
+import chione.ChioneException;
 
 /**
  * Tests {@link TaskList}, which both holds the tasks and guards its own bounds.
@@ -173,8 +173,8 @@ public class TaskListTest {
     public void asList_addingThroughTheView_exceptionThrown() {
         // The view is handed out for reading only; changing the list has to go
         // through the methods above.
-        assertThrows(UnsupportedOperationException.class,
-                () -> buildSampleList().asList().add(new Todo("sneaked in")));
+        assertThrows(UnsupportedOperationException.class, () ->
+                buildSampleList().asList().add(new Todo("sneaked in")));
     }
 
     @Test

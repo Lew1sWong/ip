@@ -1,8 +1,9 @@
 package chione;
 
+import java.util.Scanner;
+
 import chione.task.Task;
 import chione.task.TaskList;
-import java.util.Scanner;
 
 /**
  * Everything Chione says to the user, and everything it hears back.

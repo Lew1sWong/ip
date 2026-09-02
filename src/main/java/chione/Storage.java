@@ -1,10 +1,5 @@
 package chione;
 
-import chione.task.Deadline;
-import chione.task.Event;
-import chione.task.Task;
-import chione.task.TaskList;
-import chione.task.Todo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +7,12 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import chione.task.Deadline;
+import chione.task.Event;
+import chione.task.Task;
+import chione.task.TaskList;
+import chione.task.Todo;
 
 /**
  * Keeps the task list on disk so that it survives between runs of Chione.
@@ -156,27 +157,27 @@ public class Storage {
         // Each task type has its own field count, so the length check doubles as
         // a check that the line really is of the type its first field claims.
         Task task = switch (parts[0]) {
-        case "T" -> {
-            if (parts.length != 3) {
-                throw buildCorruptedFileException(line);
+            case "T" -> {
+                if (parts.length != 3) {
+                    throw buildCorruptedFileException(line);
+                }
+                yield new Todo(description);
             }
-            yield new Todo(description);
-        }
-        case "D" -> {
-            if (parts.length != 4) {
-                throw buildCorruptedFileException(line);
+            case "D" -> {
+                if (parts.length != 4) {
+                    throw buildCorruptedFileException(line);
+                }
+                yield new Deadline(description, parseSavedMoment(parts[3], line));
             }
-            yield new Deadline(description, parseSavedMoment(parts[3], line));
-        }
-        case "E" -> {
-            if (parts.length != 5) {
-                throw buildCorruptedFileException(line);
+            case "E" -> {
+                if (parts.length != 5) {
+                    throw buildCorruptedFileException(line);
+                }
+                yield new Event(description,
+                        parseSavedMoment(parts[3], line),
+                        parseSavedMoment(parts[4], line));
             }
-            yield new Event(description,
-                    parseSavedMoment(parts[3], line),
-                    parseSavedMoment(parts[4], line));
-        }
-        default -> throw buildCorruptedFileException(line);
+            default -> throw buildCorruptedFileException(line);
         };
 
         if (doneFlag.equals("1")) {

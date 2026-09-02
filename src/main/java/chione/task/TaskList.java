@@ -1,11 +1,12 @@
 package chione.task;
 
-import chione.ChioneException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+
+import chione.ChioneException;
 
 /**
  * The tasks Chione is keeping track of.
