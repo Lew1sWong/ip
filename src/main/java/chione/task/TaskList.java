@@ -37,12 +37,18 @@ public class TaskList {
     }
 
     /**
-     * Adds a task to the end of the list.
+     * Adds tasks to the end of the list, in the order given.
      *
-     * @param task the task to add
+     * <p>Accepting any number of tasks costs a caller with one task nothing --
+     * {@code add(task)} still reads the same -- and saves a caller with several
+     * from writing the same line over and over. Loading a saved list is the one
+     * case that stays separate: those tasks arrive as a list rather than as
+     * arguments someone wrote out, so they go through the constructor.
+     *
+     * @param tasksToAdd the tasks to add
      */
-    public void add(Task task) {
-        tasks.add(task);
+    public void add(Task... tasksToAdd) {
+        Collections.addAll(tasks, tasksToAdd);
     }
 
     /**
