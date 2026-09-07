@@ -6,6 +6,9 @@ package chione.task;
  * <p>Displayed as {@code [T][ ] visit new theme park}.
  */
 public class Todo extends Task {
+    /** The letter that marks a saved line as a todo. */
+    public static final String TYPE_LETTER = "T";
+
     /**
      * Creates a todo that starts out not done.
      *
@@ -32,6 +35,6 @@ public class Todo extends Task {
      */
     @Override
     public String toSaveFormat() {
-        return "T | " + super.toSaveFormat();
+        return TYPE_LETTER + SEPARATOR + super.toSaveFormat();
     }
 }
