@@ -49,6 +49,11 @@ public class TaskList {
      * @param tasksToAdd the tasks to add
      */
     public void add(Task... tasksToAdd) {
+        for (Task task : tasksToAdd) {
+            // A null would go unnoticed until the list is shown or saved, long
+            // after the mistake that put it here.
+            assert task != null : "cannot add a null task";
+        }
         Collections.addAll(tasks, tasksToAdd);
     }
 

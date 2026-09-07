@@ -71,6 +71,10 @@ application {
     // plain classpath makes the runtime complain about missing JavaFX components,
     // so a separate class that is not an Application launches it instead.
     mainClass = 'chione.gui.Launcher'
+    // Java runs with assertions off unless asked. -ea turns them on for
+    // `gradle run` and for the generated start scripts, so the assert
+    // statements in the code actually execute rather than being skipped.
+    applicationDefaultJvmArgs = ['-ea']
 }
 
 jar {
@@ -96,4 +100,7 @@ tasks.register('runText', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'chione.Chione'
     standardInput = System.in
+    // Same reason as applicationDefaultJvmArgs above: this task is a separate
+    // JavaExec, so it does not inherit the flag from the application block.
+    enableAssertions = true
 }
