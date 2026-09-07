@@ -12,6 +12,9 @@ import chione.DateTimes;
  * <p>Displayed as {@code [D][ ] submit report (by: Oct 15 2019, 6:00pm)}.
  */
 public class Deadline extends Task {
+    /** The letter that marks a saved line as a deadline. */
+    public static final String TYPE_LETTER = "D";
+
     /**
      * When the task is due.
      *
@@ -54,6 +57,7 @@ public class Deadline extends Task {
      */
     @Override
     public String toSaveFormat() {
-        return "D | " + super.toSaveFormat() + " | " + DateTimes.toSaveFormat(by);
+        return TYPE_LETTER + SEPARATOR + super.toSaveFormat()
+                + SEPARATOR + DateTimes.toSaveFormat(by);
     }
 }
