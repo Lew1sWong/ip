@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import chione.task.Deadline;
 import chione.task.Event;
@@ -27,17 +28,42 @@ import chione.task.Todo;
  * turned into text and back again.
  */
 public class Storage {
-    /** Separator between the fields of one saved line. */
-    private static final String SEPARATOR = " | ";
-
     /**
-     * Regular expression matching {@link #SEPARATOR}.
+     * Regular expression matching {@link Task#SEPARATOR}.
      *
      * <p>{@code split} takes a regex, and {@code |} means "or" in a regex, so the
-     * bar has to be escaped with a backslash — which itself has to be escaped to
-     * survive being written in a Java string literal.
+     * separator cannot be handed to it as it stands. {@link Pattern#quote} does the
+     * escaping, which keeps this in step with the separator the tasks actually
+     * write: escaping it by hand here would be a second copy of the same knowledge.
      */
-    private static final String SEPARATOR_PATTERN = " \\| ";
+    private static final String SEPARATOR_PATTERN = Pattern.quote(Task.SEPARATOR);
+
+    /** Fields on a saved todo line: the type letter, the done flag and the description. */
+    private static final int TODO_FIELD_COUNT = 3;
+
+    /** Fields on a saved deadline line: a todo's three, plus the due date. */
+    private static final int DEADLINE_FIELD_COUNT = 4;
+
+    /** Fields on a saved event line: a todo's three, plus the start and the end. */
+    private static final int EVENT_FIELD_COUNT = 5;
+
+    /** Position of the type letter in a saved line. */
+    private static final int TYPE_INDEX = 0;
+
+    /** Position of the done flag in a saved line. */
+    private static final int DONE_INDEX = 1;
+
+    /** Position of the description in a saved line. */
+    private static final int DESCRIPTION_INDEX = 2;
+
+    /** Position of the due date on a saved deadline line. */
+    private static final int DUE_DATE_INDEX = 3;
+
+    /** Position of the start moment on a saved event line. */
+    private static final int START_INDEX = 3;
+
+    /** Position of the end moment on a saved event line. */
+    private static final int END_INDEX = 4;
 
     /**
      * Where the tasks are stored.
@@ -144,46 +170,66 @@ public class Storage {
      */
     private static Task parseTask(String line) throws ChioneException {
         String[] parts = line.split(SEPARATOR_PATTERN);
-        if (parts.length < 3) {
+        if (parts.length < TODO_FIELD_COUNT) {
             throw buildCorruptedFileException(line);
         }
 
-        String doneFlag = parts[1];
-        if (!doneFlag.equals("0") && !doneFlag.equals("1")) {
+        String doneFlag = parts[DONE_INDEX];
+        if (!doneFlag.equals(Task.NOT_DONE_FLAG) && !doneFlag.equals(Task.DONE_FLAG)) {
             throw buildCorruptedFileException(line);
         }
-        String description = parts[2];
-
-        // Each task type has its own field count, so the length check doubles as
-        // a check that the line really is of the type its first field claims.
-        Task task = switch (parts[0]) {
-            case "T" -> {
-                if (parts.length != 3) {
-                    throw buildCorruptedFileException(line);
-                }
-                yield new Todo(description);
-            }
-            case "D" -> {
-                if (parts.length != 4) {
-                    throw buildCorruptedFileException(line);
-                }
-                yield new Deadline(description, parseSavedMoment(parts[3], line));
-            }
-            case "E" -> {
-                if (parts.length != 5) {
-                    throw buildCorruptedFileException(line);
-                }
-                yield new Event(description,
-                        parseSavedMoment(parts[3], line),
-                        parseSavedMoment(parts[4], line));
-            }
-            default -> throw buildCorruptedFileException(line);
-        };
-
-        if (doneFlag.equals("1")) {
+        Task task = buildTask(parts, line);
+        if (doneFlag.equals(Task.DONE_FLAG)) {
             task.markAsDone();
         }
         return task;
+    }
+
+    /**
+     * Builds the kind of task the line's first field claims it is.
+     *
+     * <p>Each task type has its own field count, so the length check doubles as a
+     * check that the line really is of the type it claims to be.
+     *
+     * @param parts the fields of one saved line
+     * @param line  the whole line, quoted back if it cannot be understood
+     * @return the task the line describes, not yet marked as done
+     * @throws ChioneException if the line does not match any known task format
+     */
+    private static Task buildTask(String[] parts, String line) throws ChioneException {
+        String description = parts[DESCRIPTION_INDEX];
+        return switch (parts[TYPE_INDEX]) {
+            case Todo.TYPE_LETTER -> {
+                requireFieldCount(parts, TODO_FIELD_COUNT, line);
+                yield new Todo(description);
+            }
+            case Deadline.TYPE_LETTER -> {
+                requireFieldCount(parts, DEADLINE_FIELD_COUNT, line);
+                yield new Deadline(description, parseSavedMoment(parts[DUE_DATE_INDEX], line));
+            }
+            case Event.TYPE_LETTER -> {
+                requireFieldCount(parts, EVENT_FIELD_COUNT, line);
+                yield new Event(description,
+                        parseSavedMoment(parts[START_INDEX], line),
+                        parseSavedMoment(parts[END_INDEX], line));
+            }
+            default -> throw buildCorruptedFileException(line);
+        };
+    }
+
+    /**
+     * Refuses a line that does not have exactly the number of fields its type needs.
+     *
+     * @param parts    the fields of one saved line
+     * @param expected how many fields that type of line must have
+     * @param line     the whole line, quoted back if it cannot be understood
+     * @throws ChioneException if the count does not match
+     */
+    private static void requireFieldCount(String[] parts, int expected, String line)
+            throws ChioneException {
+        if (parts.length != expected) {
+            throw buildCorruptedFileException(line);
+        }
     }
 
     /**
