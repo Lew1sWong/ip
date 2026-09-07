@@ -35,6 +35,14 @@ Chione shows it back in a friendlier form, e.g. `Oct 15 2019, 6:00pm`.
 `on 2019-10-15` lists everything happening that day: deadlines falling on it, and
 events running over it, including ones that started on an earlier day.
 
+### Repeats
+
+Adding a task that is already in the list is refused, so a `todo read book`
+typed twice leaves one task, not two. Two tasks count as the same when they are
+the same kind, have the same description (ignoring case) and, for a deadline,
+are due at the same moment or, for an event, start and end at the same moments.
+Whether the existing one is done makes no difference.
+
 ### Searching
 
 `find book` shows every task whose description contains that text. The search

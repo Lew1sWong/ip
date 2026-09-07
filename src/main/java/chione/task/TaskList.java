@@ -149,6 +149,19 @@ public class TaskList {
     }
 
     /**
+     * Reports whether the list already holds a repeat of the given task.
+     *
+     * <p>Each stored task is asked whether it is a repeat of the newcomer, so this
+     * works for any task type without the list knowing what kinds exist.
+     *
+     * @param task the task about to be added
+     * @return {@code true} if a task already in the list is a repeat of it
+     */
+    public boolean hasDuplicateOf(Task task) {
+        return tasks.stream().anyMatch(stored -> stored.isDuplicateOf(task));
+    }
+
+    /**
      * Returns the tasks that answer yes to a question.
      *
      * <p>Searching by date and searching by word differ only in what is asked of

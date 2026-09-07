@@ -45,6 +45,17 @@ public class Deadline extends Task {
         return by.toLocalDate().equals(date);
     }
 
+    /**
+     * Reports whether this deadline repeats another task: same description,
+     * and due at the same moment.
+     *
+     * <p>The class check in {@code super} guarantees the cast below is safe.
+     */
+    @Override
+    public boolean isDuplicateOf(Task other) {
+        return super.isDuplicateOf(other) && by.equals(((Deadline) other).by);
+    }
+
     /** Returns the task prefixed with its type icon and followed by the due date. */
     @Override
     public String toString() {

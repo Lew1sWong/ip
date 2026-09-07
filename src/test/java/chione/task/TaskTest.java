@@ -164,6 +164,71 @@ public class TaskTest {
         assertFalse(buildThreeDayEvent().occursOn(LocalDate.of(2019, 10, 14)));
     }
 
+    @Test
+    public void isDuplicateOf_sameDescriptionDifferentCase_true() {
+        assertTrue(new Todo("Read Book").isDuplicateOf(new Todo("read book")));
+    }
+
+    @Test
+    public void isDuplicateOf_differentDescription_false() {
+        assertFalse(new Todo("read book").isDuplicateOf(new Todo("return book")));
+    }
+
+    @Test
+    public void isDuplicateOf_todoAndDeadlineSameDescription_false() {
+        // Same words, different kind of task: not a repeat.
+        assertFalse(new Todo("report").isDuplicateOf(new Deadline("report", SIX_PM)));
+    }
+
+    @Test
+    public void isDuplicateOf_oneTaskDone_true() {
+        // Finishing a task and adding it again is still adding it again.
+        Todo done = new Todo("read book");
+        done.markAsDone();
+        assertTrue(new Todo("read book").isDuplicateOf(done));
+    }
+
+    @Test
+    public void isDuplicateOf_deadlinesSameMoment_true() {
+        assertTrue(new Deadline("report", SIX_PM).isDuplicateOf(new Deadline("report", SIX_PM)));
+    }
+
+    @Test
+    public void isDuplicateOf_deadlinesDifferentMoments_false() {
+        assertFalse(new Deadline("report", SIX_PM).isDuplicateOf(new Deadline("report", MIDNIGHT)));
+    }
+
+    @Test
+    public void isDuplicateOf_eventsSameMoments_true() {
+        assertTrue(buildThreeDayEvent().isDuplicateOf(buildThreeDayEvent()));
+    }
+
+    @Test
+    public void isDuplicateOf_eventsDifferentEndTime_false() {
+        Event shorter = new Event("meeting",
+                LocalDateTime.of(2019, 10, 15, 14, 0),
+                LocalDateTime.of(2019, 10, 16, 16, 0));
+        assertFalse(buildThreeDayEvent().isDuplicateOf(shorter));
+    }
+
+    @Test
+    public void isDuplicateOf_eventsDifferentStartTime_false() {
+        Event later = new Event("meeting",
+                LocalDateTime.of(2019, 10, 16, 14, 0),
+                LocalDateTime.of(2019, 10, 17, 16, 0));
+        assertFalse(buildThreeDayEvent().isDuplicateOf(later));
+    }
+
+    @Test
+    public void isDuplicateOf_deadlineAndEventSameDescription_false() {
+        // Called both ways round: each override casts, relying on the class
+        // check in Task to have refused first.
+        Deadline deadline = new Deadline("report", SIX_PM);
+        Event event = new Event("report", SIX_PM, LocalDateTime.of(2019, 10, 15, 20, 0));
+        assertFalse(deadline.isDuplicateOf(event));
+        assertFalse(event.isDuplicateOf(deadline));
+    }
+
     /** An event running from the 15th to the 17th of October 2019. */
     private Event buildThreeDayEvent() {
         return new Event("meeting",

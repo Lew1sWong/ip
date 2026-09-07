@@ -112,6 +112,28 @@ public class Task {
     }
 
     /**
+     * Reports whether this task is a repeat of another one.
+     *
+     * <p>Sameness here is deliberately weaker than {@code equals}: two tasks
+     * are repeats when they are the same kind of task, about the same thing
+     * and, for dated tasks, at the same moment. Whether either one is done is
+     * ignored, because re-adding a task you already finished is still a
+     * repeat. {@code equals} is left alone on purpose: an {@code equals} that
+     * ignores one of the object's own fields is a trap for any collection that
+     * relies on it, whereas a method with this name says exactly what it tests.
+     *
+     * <p>The description is compared ignoring case, as {@link #hasKeyword}
+     * does, so "Read book" and "read book" count as the same task.
+     *
+     * @param other the task being compared against
+     * @return {@code true} if adding this task would repeat {@code other}
+     */
+    public boolean isDuplicateOf(Task other) {
+        return getClass() == other.getClass()
+                && description.equalsIgnoreCase(other.description);
+    }
+
+    /**
      * Returns this task as one line of the save file, e.g. {@code "1 | read book"}.
      *
      * <p>Each subclass prefixes its own type letter and appends its own extra

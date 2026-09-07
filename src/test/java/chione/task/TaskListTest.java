@@ -202,4 +202,26 @@ public class TaskListTest {
         assertEquals(3, buildSampleList().asList().size());
         assertEquals("[T][ ] read book", buildSampleList().asList().get(0).toString());
     }
+
+    @Test
+    public void hasDuplicateOf_taskAlreadyInList_true() {
+        assertTrue(buildSampleList().hasDuplicateOf(new Todo("read book")));
+    }
+
+    @Test
+    public void hasDuplicateOf_sameDescriptionDifferentType_false() {
+        // "read book" is in the list as a todo, so a deadline by that name is new.
+        assertFalse(buildSampleList().hasDuplicateOf(
+                new Deadline("read book", LocalDateTime.of(2019, 10, 15, 18, 0))));
+    }
+
+    @Test
+    public void hasDuplicateOf_newTask_false() {
+        assertFalse(buildSampleList().hasDuplicateOf(new Todo("something else")));
+    }
+
+    @Test
+    public void hasDuplicateOf_emptyList_false() {
+        assertFalse(new TaskList().hasDuplicateOf(new Todo("read book")));
+    }
 }
