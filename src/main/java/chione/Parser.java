@@ -1,6 +1,8 @@
 package chione;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import chione.command.AddCommand;
 import chione.command.Command;
@@ -82,14 +84,15 @@ public final class Parser {
      */
     private static CommandType parseType(String input) throws ChioneException {
         // values() returns every constant of the enum, in the order declared.
-        for (CommandType command : CommandType.values()) {
-            String keyword = command.getKeyword();
-            if (input.equals(keyword) || input.startsWith(keyword + " ")) {
-                return command;
-            }
-        }
-        throw new ChioneException("I don't know what \"" + input + "\" means. "
-                + "I understand: " + listKeywords() + ".");
+        // Written as a stream so that the answer and the refusal sit side by
+        // side: with a loop, falling out of the bottom is what means "no match",
+        // and the reader has to notice that for themselves.
+        return Arrays.stream(CommandType.values())
+                .filter(command -> input.equals(command.getKeyword())
+                        || input.startsWith(command.getKeyword() + " "))
+                .findFirst()
+                .orElseThrow(() -> new ChioneException("I don't know what \"" + input + "\" means. "
+                        + "I understand: " + listKeywords() + "."));
     }
 
     /**
@@ -257,13 +260,8 @@ public final class Parser {
      * @return e.g. {@code "todo, deadline, event, list, on, ..."}
      */
     private static String listKeywords() {
-        StringBuilder keywords = new StringBuilder();
-        for (CommandType command : CommandType.values()) {
-            if (!keywords.isEmpty()) {
-                keywords.append(", ");
-            }
-            keywords.append(command.getKeyword());
-        }
-        return keywords.toString();
+        return Arrays.stream(CommandType.values())
+                .map(CommandType::getKeyword)
+                .collect(Collectors.joining(", "));
     }
 }
