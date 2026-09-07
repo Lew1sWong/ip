@@ -30,6 +30,9 @@ public class Deadline extends Task {
      */
     public Deadline(String description, LocalDateTime by) {
         super(description);
+        // Both callers get the moment from DateTimes.parse, which throws rather
+        // than hand back null; this records that reliance.
+        assert by != null : "a deadline with no moment has nothing to compare or show";
         this.by = by;
     }
 
