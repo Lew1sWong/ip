@@ -13,6 +13,24 @@ import java.util.Locale;
  */
 public class Task {
     /**
+     * Separates the fields of one saved line, e.g. {@code "T | 1 | read book"}.
+     *
+     * <p>A bar is used rather than a comma, because a comma is far more likely to
+     * turn up inside a description the user typed.
+     *
+     * <p>It is named here, beside the method that writes it, so that
+     * {@link chione.Storage Storage} can split a line back apart on the same
+     * separator instead of spelling it out a second time.
+     */
+    public static final String SEPARATOR = " | ";
+
+    /** The done field of a saved line, for a task the user has completed. */
+    public static final String DONE_FLAG = "1";
+
+    /** The done field of a saved line, for a task the user has not completed. */
+    public static final String NOT_DONE_FLAG = "0";
+
+    /**
      * What the user wants to do, e.g. {@code "read book"}.
      *
      * <p>{@code protected} rather than {@code private} so that the subclasses
@@ -98,13 +116,11 @@ public class Task {
      *
      * <p>Each subclass prefixes its own type letter and appends its own extra
      * fields, so every class writes exactly the part it knows about and no single
-     * method has to know about all three task types. Fields are separated by
-     * {@code " | "} rather than a comma, because a comma is far more likely to
-     * turn up inside a description the user typed.
+     * method has to know about all three task types.
      *
      * @return the part every task shares: the done flag and the description
      */
     public String toSaveFormat() {
-        return (isDone ? "1" : "0") + " | " + description;
+        return (isDone ? DONE_FLAG : NOT_DONE_FLAG) + SEPARATOR + description;
     }
 }

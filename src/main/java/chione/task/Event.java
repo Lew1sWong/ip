@@ -13,6 +13,9 @@ import chione.DateTimes;
  * {@code [E][ ] project meeting (from: Oct 15 2019, 2:00pm to: Oct 15 2019, 4:00pm)}.
  */
 public class Event extends Task {
+    /** The letter that marks a saved line as an event. */
+    public static final String TYPE_LETTER = "E";
+
     /** When the event starts, held as a real moment like {@link Deadline#by}. */
     protected LocalDateTime from;
 
@@ -58,7 +61,8 @@ public class Event extends Task {
      */
     @Override
     public String toSaveFormat() {
-        return "E | " + super.toSaveFormat()
-                + " | " + DateTimes.toSaveFormat(from) + " | " + DateTimes.toSaveFormat(to);
+        return TYPE_LETTER + SEPARATOR + super.toSaveFormat()
+                + SEPARATOR + DateTimes.toSaveFormat(from)
+                + SEPARATOR + DateTimes.toSaveFormat(to);
     }
 }
