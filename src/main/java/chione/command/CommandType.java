@@ -79,6 +79,10 @@ public enum CommandType {
      * @return the arguments, trimmed
      */
     public String argumentsOf(String input) {
+        // Parser recognized the keyword before handing the line over, so the
+        // substring below can never run off the end of the input.
+        assert input.startsWith(keyword)
+                : "argumentsOf needs a line starting with \"" + keyword + "\"";
         return input.substring(keyword.length()).trim();
     }
 }

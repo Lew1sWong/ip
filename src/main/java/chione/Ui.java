@@ -228,6 +228,10 @@ public class Ui {
      * @return the heading and one line per task
      */
     private static String[] buildNumberedLines(String heading, TaskList tasks) {
+        // Every caller shows its own message for an empty list before getting
+        // here, so a heading with nothing under it would be a mistake.
+        assert !tasks.isEmpty() : "buildNumberedLines expects at least one task";
+
         String[] lines = new String[tasks.size() + 1];
         lines[0] = heading;
 

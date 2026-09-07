@@ -31,6 +31,9 @@ public class Event extends Task {
      */
     public Event(String description, LocalDateTime from, LocalDateTime to) {
         super(description);
+        // Only that both moments exist: a start later than the end is something
+        // the user can type, so it is not a broken assumption.
+        assert from != null && to != null : "an event needs both of its moments";
         this.from = from;
         this.to = to;
     }
