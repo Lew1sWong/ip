@@ -1,5 +1,7 @@
 # Chione
 
+[![Java CI](https://github.com/Lew1sWong/ip/actions/workflows/gradle.yml/badge.svg)](https://github.com/Lew1sWong/ip/actions/workflows/gradle.yml)
+
 Chione is a command-line personal assistant chatbot that keeps track of your tasks.
 It is built as the individual project (iP) for CS2103/T.
 
