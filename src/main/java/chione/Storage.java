@@ -106,12 +106,11 @@ public class Storage {
                 Files.createDirectories(parentFolder);
             }
 
-            List<String> lines = new ArrayList<>();
-            for (Task task : tasks.asList()) {
-                // Each task renders its own line, so this loop never has to ask
-                // what kind of task it is holding.
-                lines.add(task.toSaveFormat());
-            }
+            // Each task renders its own line, so this never has to ask what kind
+            // of task it is holding. One line out per task in is what map means.
+            List<String> lines = tasks.asList().stream()
+                    .map(Task::toSaveFormat)
+                    .toList();
 
             // Files.write creates the file if it is missing and truncates it if
             // it is not, which is exactly the "replace the contents" we want.

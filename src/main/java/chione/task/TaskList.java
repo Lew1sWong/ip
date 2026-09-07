@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import chione.ChioneException;
 
@@ -156,17 +157,17 @@ public class TaskList {
      * takes one thing and answers true or false"; the callers above supply one
      * as a lambda, which is shorthand for a whole class that only holds a test.
      *
+     * <p>The tasks are gathered into an {@link ArrayList} rather than with
+     * {@code toList()}, because the constructor this hands them to takes one, and
+     * because a list this class owns has to stay modifiable.
+     *
      * @param test what to ask of each task
      * @return the tasks that answered yes, in their original order
      */
     private TaskList filter(Predicate<Task> test) {
-        ArrayList<Task> matches = new ArrayList<>();
-        for (Task task : tasks) {
-            if (test.test(task)) {
-                matches.add(task);
-            }
-        }
-        return new TaskList(matches);
+        return new TaskList(tasks.stream()
+                .filter(test)
+                .collect(Collectors.toCollection(ArrayList::new)));
     }
 
     /**
