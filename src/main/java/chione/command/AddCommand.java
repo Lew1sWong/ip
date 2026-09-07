@@ -28,6 +28,13 @@ public class AddCommand extends Command {
 
     @Override
     public void execute(TaskList tasks, Ui ui, Storage storage) throws ChioneException {
+        // Refused here rather than inside TaskList.add: a repeat is a rule about
+        // what the user may type, not about what the list may hold. A loaded save
+        // file is taken as written, and it never passes through add anyway.
+        if (tasks.hasDuplicateOf(task)) {
+            throw new ChioneException("You already have that task: " + task
+                    + ". I have not added it again; type list to see it.");
+        }
         tasks.add(task);
         ui.showAdded(task, tasks.size());
         storage.save(tasks);

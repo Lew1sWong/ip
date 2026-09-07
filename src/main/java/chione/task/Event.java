@@ -51,6 +51,21 @@ public class Event extends Task {
         return !date.isBefore(from.toLocalDate()) && !date.isAfter(to.toLocalDate());
     }
 
+    /**
+     * Reports whether this event repeats another task: same description, and
+     * running between the same two moments.
+     *
+     * <p>The class check in {@code super} guarantees the cast below is safe.
+     */
+    @Override
+    public boolean isDuplicateOf(Task other) {
+        if (!super.isDuplicateOf(other)) {
+            return false;
+        }
+        Event that = (Event) other;
+        return from.equals(that.from) && to.equals(that.to);
+    }
+
     /** Returns the task prefixed with its type icon and followed by its time range. */
     @Override
     public String toString() {
