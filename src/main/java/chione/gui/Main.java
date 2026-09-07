@@ -27,6 +27,16 @@ public class Main extends Application {
      */
     private final Chione chione = new Chione();
 
+    /**
+     * Creates the application.
+     *
+     * <p>JavaFX constructs this class itself when {@link chione.gui.Launcher}
+     * starts it, so the constructor has nothing to do: it exists so that the
+     * documentation build has something to attach this comment to.
+     */
+    public Main() {
+    }
+
     @Override
     public void start(Stage stage) {
         try {

@@ -48,6 +48,16 @@ public class MainWindow extends AnchorPane {
     private final Image chioneImage = new Image(this.getClass().getResourceAsStream("/images/DaChione.png"));
 
     /**
+     * Creates the controller.
+     *
+     * <p>The FXML loader constructs this class and then fills in the fields
+     * marked {@code @FXML}, so nothing can be set up here yet; that waits for
+     * {@link #initialize()}.
+     */
+    public MainWindow() {
+    }
+
+    /**
      * Finishes setting up the window once the FXML has been read.
      *
      * <p>Called by the FXML loader, after the controls exist but before the window
